@@ -1,0 +1,115 @@
+/* --- NoticePage 전용 스타일 --- */
+.gl-notice-page {
+  max-width: 1100px;
+  margin: 40px auto 80px;
+  padding: 0 20px;
+}
+
+.gl-notice-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.gl-notice-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+.gl-notice-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+/* 검색창 영역 */
+.gl-notice-search-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.gl-notice-search-box {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+}
+
+.gl-notice-search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 18px;
+}
+
+.gl-notice-search-input {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border: 1.5px solid #eee;
+  border-radius: 12px;
+  font-size: 14px;
+  outline: none;
+  font-weight: 700;
+}
+
+/* 테이블 카드 디자인 */
+.gl-notice-table-card {
+  background: #fff;
+  border: 1px solid rgba(244, 185, 196, 0.4);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.gl-notice-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gl-notice-table th {
+  background: #fffafb;
+  padding: 15px 10px;
+  font-size: 14px;
+  font-weight: 900;
+  border-bottom: 1.5px solid rgba(244, 185, 196, 0.3);
+}
+
+.gl-notice-table td {
+  padding: 14px 10px;
+  font-size: 14px;
+  color: #4b5563;
+  border-bottom: 1px solid #f9f9f9;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* 중요 공지 행 강조 */
+.gl-notice-table tr.is-pinned {
+  background-color: #fff9f9;
+}
+
+.gl-pin-icon {
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.gl-notice-tag {
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.gl-notice-footer {
+  text-align: center;
+  margin-top: 30px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 800;
+}

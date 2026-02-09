@@ -1,0 +1,121 @@
+/* --- InfoBoardPage 전용 스타일 --- */
+.gl-info-board-page {
+  max-width: 1000px;
+  margin: 40px auto 80px;
+  padding: 0 20px;
+}
+
+/* 상단 헤더: 검색바 + 글쓰기 버튼 */
+.gl-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 20px;
+}
+
+.gl-board-search-box {
+  position: relative;
+  flex: 1;
+  max-width: 800px;
+}
+
+.gl-board-search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 18px;
+}
+
+.gl-board-search-input {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border: 1.5px solid #eee;
+  border-radius: 12px;
+  font-size: 14px;
+  outline: none;
+  font-weight: 700;
+  transition: border-color 0.2s;
+}
+
+.gl-board-search-input:focus { border-color: #e11d48; }
+
+.gl-board-write-btn {
+  background-color: #e11d48; /* 시안의 빨간색 버튼 */
+  color: #fff;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 테이블 카드 디자인 */
+.gl-board-table-card {
+  background: #fff;
+  border: 1px solid rgba(244, 185, 196, 0.4);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.gl-board-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gl-board-table th {
+  background: #fffafb; /* 연한 핑크 배경 */
+  padding: 15px 10px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #333;
+  border-bottom: 1.5px solid rgba(244, 185, 196, 0.3);
+}
+
+.gl-board-table td {
+  padding: 16px 10px;
+  font-size: 14px;
+  color: #4b5563;
+  border-bottom: 1px solid #f9f9f9;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* 제목 열 정렬 및 댓글 수 */
+.gl-td-title {
+  text-align: left !important;
+  padding-left: 30px !important;
+}
+
+.gl-title-text {
+  color: #111;
+  cursor: pointer;
+}
+
+.gl-title-text:hover { text-decoration: underline; }
+
+.gl-comment-count {
+  color: #e11d48; /* 빨간색 댓글 표시 */
+  font-size: 13px;
+  margin-left: 8px;
+  font-weight: 800;
+}
+
+/* 추천수 강조 */
+.gl-td-likes {
+  color: #e11d48;
+  font-weight: 900;
+}
+
+.gl-board-footer {
+  text-align: center;
+  margin-top: 30px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 800;
+}

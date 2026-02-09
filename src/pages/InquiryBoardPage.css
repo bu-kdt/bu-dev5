@@ -1,0 +1,121 @@
+/* --- InquiryBoardPage 전용 스타일 --- */
+.gl-inquiry-page {
+  max-width: 1100px;
+  margin: 40px auto 80px;
+  padding: 0 20px;
+}
+
+.gl-inquiry-top-info {
+  text-align: center;
+  color: #6b7280;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 30px;
+}
+
+.gl-inquiry-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  gap: 15px;
+}
+
+.gl-inquiry-search-box {
+  position: relative;
+  flex: 1;
+  max-width: 750px;
+}
+
+.gl-inquiry-search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 18px;
+}
+
+.gl-inquiry-search-input {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border: 1.5px solid #eee;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+}
+
+.gl-inquiry-write-btn {
+  background-color: #e11d48;
+  color: #fff;
+  padding: 0 25px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.gl-inquiry-table-card {
+  background: #fff;
+  border: 1px solid rgba(244, 185, 196, 0.4);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.gl-inquiry-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gl-inquiry-table th {
+  background: #fffafb;
+  padding: 15px;
+  font-weight: 900;
+  font-size: 14px;
+  border-bottom: 1.5px solid rgba(244, 185, 196, 0.3);
+}
+
+.gl-inquiry-table td {
+  padding: 16px 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #4b5563;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+/* 상태 배지 스타일 */
+.gl-status-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.gl-status-badge.is-complete {
+  background-color: #ecfdf5;
+  color: #10b981; /* 완료: 초록색 */
+}
+
+.gl-status-badge.is-waiting {
+  background-color: #fff7ed;
+  color: #f97316; /* 대기: 주황색 */
+}
+
+.gl-td-title { text-align: left !important; padding-left: 30px !important; }
+
+.gl-title-inner { display: flex; align-items: center; gap: 8px; }
+
+.gl-lock-icon { color: #9ca3af; font-size: 16px; }
+
+.gl-title-text { color: #111; cursor: pointer; }
+
+.gl-inquiry-footer {
+  text-align: center;
+  margin-top: 30px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 800;
+}
