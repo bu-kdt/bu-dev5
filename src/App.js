@@ -1,25 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import "./App.css";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+
+export default function App() {
+  const [page, setPage] = useState("home"); // 'home' | 'login'
+  const [user, setUser] = useState(null);
+
+  const goHome = () => setPage("home");
+  const goLogin = () => setPage("login");
+
+  const onLogin = (payload) => {
+    setUser(payload);
+    setPage("home");
+  };
+
+  const onLogout = () => {
+    setUser(null);
+  };
+
+  if (page === "login") {
+    return <Login onLogin={onLogin} onBack={goHome} />;
+  }
+
+  return <Home user={user} onLogout={onLogout} onGoLogin={goLogin} onGoHome={goHome} />;
 }
 
-export default App;
+
