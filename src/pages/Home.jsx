@@ -201,7 +201,7 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
           ) : (
             <button className="gl-open-toggle-btn gl-toggle-filter" onClick={() => setIsFilterOpen(true)}>› 필터</button>
           )}
-          <MapView />
+          <MapView ref={mapRef} />
           {isResultOpen ? (
             <ResultView user={user} items={filtered} sortMode={sortMode} onToggleSort={() => setSortMode(p => p === "추천" ? "거리" : "추천")} isBookmarked={isBookmarked} onAddBookmark={addBookmark} onRemoveBookmark={removeBookmark} onClose={() => setIsResultOpen(false)} />
           ) : (

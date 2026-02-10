@@ -1,99 +1,97 @@
-/* --- InquiryBoardWritePostPage 스타일 --- */
+/* --- InquiryBoardWritePostPage 레이아웃 --- */
 .gl-inquiry-write-container {
   max-width: 900px;
   margin: 40px auto 80px;
   padding: 0 20px;
 }
 
+.gl-inquiry-write-header h1 {
+  font-size: 24px;
+  font-weight: 900;
+  margin-bottom: 25px;
+  color: #111;
+}
+
 .gl-inquiry-write-card {
   background: #fff;
-  border: 1.5px solid rgba(244, 185, 196, 0.4);
-  border-radius: 20px;
-  padding: 35px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
-}
-
-.gl-inquiry-write-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.gl-inquiry-write-header h2 { font-size: 24px; font-weight: 900; color: #111; }
-
-.gl-close-btn { background: none; border: none; font-size: 28px; color: #999; cursor: pointer; }
-
-.gl-input-group { margin-bottom: 25px; }
-.gl-input-group label { display: block; font-weight: 800; font-size: 15px; margin-bottom: 12px; color: #333; }
-
-.gl-inquiry-write-body input[type="text"], .gl-inquiry-write-body textarea {
-  width: 100%;
-  padding: 14px 18px;
   border: 1px solid #eee;
-  border-radius: 12px;
+  border-radius: 15px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.gl-write-field { margin-bottom: 25px; }
+.gl-write-field label {
+  display: block;
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* 입력창 공통 스타일 */
+.gl-inquiry-write-card input[type="text"], 
+.gl-inquiry-write-card textarea {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #f1f1f1;
+  border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
   background: #fcfcfc;
   outline: none;
 }
 
-.gl-input-read { color: #aaa; cursor: not-allowed; background: #f7f7f7 !important; }
+.gl-read-only-input { color: #999; background: #f8f8f8 !important; }
 
-.gl-inquiry-write-body textarea { 
-  height: 250px; 
-  resize: none; 
-  border: 1.5px solid rgba(244, 185, 196, 0.3); 
-  background: #fff; 
+.gl-inquiry-write-card textarea {
+  height: 250px;
+  resize: none;
+  border: 1.5px solid rgba(225, 29, 72, 0.1); /* 레드 포인트 보더 */
 }
 
-/* 사진 첨부 영역 */
+/* 파일 업로드 영역 */
 .gl-file-upload-zone {
-  border: 1.5px dashed rgba(244, 185, 196, 0.6);
-  border-radius: 15px;
-  padding: 40px;
+  border: 1.5px dashed #eee;
+  border-radius: 12px;
+  padding: 30px;
   text-align: center;
   cursor: pointer;
 }
+.gl-upload-icon { font-size: 35px; color: #cbd5e1; margin-bottom: 8px; }
 
-.gl-upload-icon { font-size: 40px; color: #cbd5e1; margin-bottom: 10px; }
-
-/* 비밀글 옵션 스타일 */
-.gl-private-option {
-  margin: 20px 0;
-  display: flex;
-  align-items: center;
-}
-
+/* 비밀글 설정 및 하단 요소 */
+.gl-private-option { margin: 20px 0; }
 .gl-checkbox-label {
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 800;
   font-size: 14px;
-  color: #333;
   cursor: pointer;
 }
+.gl-lock-icon { color: #666; font-size: 18px; }
 
-.gl-lock-icon { font-size: 18px; color: #666; }
-
-/* 안내 문구 박스 (라이트 블루) */
 .gl-inquiry-info-box {
-  background-color: #f0f7ff;
-  border: 1px solid #d0e7ff;
+  background-color: #f8fafc;
+  border: 1px solid #f1f5f9;
   border-radius: 10px;
   padding: 15px 20px;
   font-size: 13.5px;
-  color: #0056b3;
+  color: #64748b;
   font-weight: 700;
-  margin-top: 25px;
 }
 
-/* 하단 버튼 */
-.gl-inquiry-write-footer {
-  display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px;
+.gl-write-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px; }
+.gl-btn-cancel { background: #f1f5f9; color: #64748b; padding: 12px 25px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; }
+
+/* 작성하기 버튼 (레드) */
+.gl-btn-submit {
+  background: #e11d48;
+  color: #fff;
+  padding: 12px 30px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 900;
+  cursor: pointer;
 }
-
-.gl-btn-cancel { background: #f1f5f9; color: #64748b; padding: 13px 28px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; }
-
-.gl-btn-submit { background: #e11d48; color: #fff; padding: 13px 35px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; }
