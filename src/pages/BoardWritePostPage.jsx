@@ -1,16 +1,23 @@
 import React, { useState } from "react";
-import { HiXMark } from "react-icons/hi2"; // 닫기 아이콘
-import { HiOutlineCloudArrowUp } from "react-icons/hi2"; // 업로드 아이콘
+import { HiXMark, HiOutlineCloudArrowUp } from "react-icons/hi2"; 
 import "./BoardWritePostPage.css";
 
-export default function BoardWritePostPage({ onBack, user }) {
+export default function BoardWritePostPage({ onBack, user, onCreatePost }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+
+  const handleRegister = () => {
+    if (!title.trim() || !content.trim()) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
+    // 등록 시에도 이름을 함께 넘겨줍니다.
+    onCreatePost({ title, content });
+  };
 
   return (
     <div className="gl-write-container">
       <div className="gl-write-card">
-        {/* 상단 헤더: 제목 및 닫기 버튼 */}
         <header className="gl-write-header">
           <h2>글쓰기</h2>
           <button className="gl-close-btn" onClick={onBack}>
@@ -19,18 +26,17 @@ export default function BoardWritePostPage({ onBack, user }) {
         </header>
 
         <main className="gl-write-body">
-          {/* 작성자: 시안의 'bu' 계정 반영 */}
           <div className="gl-input-group">
             <label>작성자</label>
             <input 
               type="text" 
-              value={user?.userid || "bu"} 
+              // ✅ userid 대신 name으로 수정했습니다.
+              value={user?.name || ""} 
               readOnly 
               className="gl-input-read" 
             />
           </div>
 
-          {/* 제목 입력 */}
           <div className="gl-input-group">
             <label>제목</label>
             <input 
@@ -41,7 +47,6 @@ export default function BoardWritePostPage({ onBack, user }) {
             />
           </div>
 
-          {/* 내용 입력 */}
           <div className="gl-input-group">
             <label>내용</label>
             <textarea 
@@ -51,7 +56,6 @@ export default function BoardWritePostPage({ onBack, user }) {
             ></textarea>
           </div>
 
-          {/* 사진 첨부 영역 */}
           <div className="gl-input-group">
             <label>사진 첨부</label>
             <div className="gl-file-upload-zone">
@@ -62,10 +66,11 @@ export default function BoardWritePostPage({ onBack, user }) {
           </div>
         </main>
 
-        {/* 하단 버튼 영역 */}
         <footer className="gl-write-footer">
           <button className="gl-btn-cancel" onClick={onBack}>취소</button>
-          <button className="gl-btn-submit">등록하기</button>
+          <button className="gl-btn-submit" onClick={handleRegister}>
+            등록하기
+          </button>
         </footer>
       </div>
     </div>

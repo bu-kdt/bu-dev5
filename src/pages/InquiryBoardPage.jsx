@@ -2,15 +2,8 @@ import React from "react";
 import { HiOutlineSearch, HiOutlineLockClosed } from "react-icons/hi";
 import "./InquiryBoardPage.css";
 
-export default function InquiryBoardPage() {
-  // 시안 기반 샘플 데이터
-  const inquiries = [
-    { id: 1, status: "완료", title: "병원 정보 수정 요청", author: "hospital_manager", views: 5, date: "02-07", isPrivate: false },
-    { id: 2, status: "완료", title: "회원 탈퇴 문의", author: "user456", views: 12, date: "02-06", isPrivate: true },
-    { id: 3, status: "대기", title: "검색 기능 오류 제보", author: "tester123", views: 8, date: "02-05", isPrivate: false },
-    { id: 4, status: "완료", title: "앱 버전도 개발 계획이 있나요?", author: "mobile_user", views: 23, date: "02-03", isPrivate: false },
-  ];
-
+// ✅ Home.jsx에서 전달받는 onSelectInquiry 프롭스를 추가합니다
+export default function InquiryBoardPage({ inquiries, onWrite, onSelectInquiry }) {
   return (
     <div className="gl-inquiry-page">
       {/* 상단 안내 문구 */}
@@ -24,7 +17,9 @@ export default function InquiryBoardPage() {
           <HiOutlineSearch className="gl-inquiry-search-icon" />
           <input type="text" placeholder="문의 검색..." className="gl-inquiry-search-input" />
         </div>
-        <button className="gl-inquiry-write-btn">문의하기</button>
+        <button className="gl-inquiry-write-btn" onClick={onWrite}>
+          문의하기
+        </button>
       </header>
 
       {/* 테이블 영역 */}
@@ -46,17 +41,23 @@ export default function InquiryBoardPage() {
                 <td className="gl-td-no">{item.id}</td>
                 <td className="gl-td-status">
                   <span className={`gl-status-badge ${item.status === "완료" ? "is-complete" : "is-waiting"}`}>
-                    {item.status}
+                    {item.status || "대기"}
                   </span>
                 </td>
-                <td className="gl-td-title">
+                {/* ✅ 제목 클릭 시 onSelectInquiry(item.id)를 실행하도록 수정했습니다 */}
+                <td 
+                  className="gl-td-title" 
+                  onClick={() => onSelectInquiry(item.id)}
+                  style={{ cursor: "pointer" }} 
+                >
                   <div className="gl-title-inner">
+                    {/* 비밀글 아이콘 표시 */}
                     {item.isPrivate && <HiOutlineLockClosed className="gl-lock-icon" />}
                     <span className="gl-title-text">{item.title}</span>
                   </div>
                 </td>
                 <td className="gl-td-author">{item.author}</td>
-                <td className="gl-td-views">{item.views}</td>
+                <td className="gl-td-views">{item.views || 0}</td>
                 <td className="gl-td-date">{item.date}</td>
               </tr>
             ))}

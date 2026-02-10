@@ -1,11 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import myLocationIcon from "../me.png";
+import hospitalIcon from "../hospital.png";
 
-export default function MapView() {
+const MapView = forwardRef((props, ref) => {
   const mapRef = useRef(null);
   const kakaoMapRef = useRef(null);
   const myMarkerRef = useRef(null);
   const openInfoRef = useRef(null);
-  const [myLocation, setMyLocation] = useState(null);
+  const myLocationRef = useRef(null); // 현재 위치 저장
 
   useEffect(() => {
     if (!window.kakao || !window.kakao.maps) return;
@@ -22,7 +29,7 @@ export default function MapView() {
   }, []);
 
   /* =========================
-     🔥 병원 마커 로드
+     병원 마커 로드
   ========================= */
   const loadHospitals = (map) => {
     fetch("http://localhost:8080/hospitals")
@@ -36,14 +43,12 @@ export default function MapView() {
             Number(h.longitude)
           );
 
-          /* ✅ 병원 커스텀 아이콘 */
-          const imageSrc =
-            "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+          const imageSize = new window.kakao.maps.Size(34, 34);
 
-          const imageSize = new window.kakao.maps.Size(30, 30);
           const markerImage = new window.kakao.maps.MarkerImage(
-            imageSrc,
-            imageSize
+            hospitalIcon,
+            imageSize,
+            { offset: new window.kakao.maps.Point(17, 17) }
           );
 
           const marker = new window.kakao.maps.Marker({
@@ -55,31 +60,24 @@ export default function MapView() {
           window.kakao.maps.event.addListener(marker, "click", () => {
             if (openInfoRef.current) openInfoRef.current.close();
 
-            /* ✅ 현재 위치가 있으면 출발지 자동 설정 */
-            const directionUrl = myLocation
-              ? `https://map.kakao.com/link/from/내위치,${myLocation.lat},${myLocation.lng}/to/${h.name},${h.latitude},${h.longitude}`
-              : `https://map.kakao.com/link/to/${h.name},${h.latitude},${h.longitude}`;
+            const currentLoc = myLocationRef.current;
+            const encodedName = encodeURIComponent(h.name);
+
+            const directionUrl = currentLoc
+              ? `https://map.kakao.com/link/from/내위치,${currentLoc.lat},${currentLoc.lng}/to/${encodedName},${h.latitude},${h.longitude}`
+              : `https://map.kakao.com/link/to/${encodedName},${h.latitude},${h.longitude}`;
 
             const infowindow = new window.kakao.maps.InfoWindow({
+              removable: true,
               content: `
                 <div class="gl-infoCard">
                   <div class="gl-infoTitle">${h.name}</div>
-
                   <div class="gl-infoRow">
-                    <span class="gl-infoLabel">📍 주소</span>
-                    <span>${h.address || "-"}</span>
+                    <span>📍 ${h.address || "-"}</span>
                   </div>
-
                   <div class="gl-infoRow">
-                    <span class="gl-infoLabel">☎ 전화</span>
-                    <span>${h.phone || "-"}</span>
+                    <span>☎ ${h.phone || "-"}</span>
                   </div>
-
-                  <div class="gl-infoRow">
-                    <span class="gl-infoLabel">🏥 진료과</span>
-                    <span>${h.department || "-"}</span>
-                  </div>
-
                   <a href="${directionUrl}"
                      target="_blank"
                      class="gl-infoBtn">
@@ -97,7 +95,7 @@ export default function MapView() {
   };
 
   /* =========================
-     🔥 현재 위치 이동
+     현재 위치 이동
   ========================= */
   const moveToMyLocation = () => {
     const map = kakaoMapRef.current;
@@ -108,30 +106,28 @@ export default function MapView() {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
 
-        setMyLocation({ lat, lng });
-
         const moveLatLng = new window.kakao.maps.LatLng(lat, lng);
 
         map.setLevel(3);
         map.panTo(moveLatLng);
 
-        /* ✅ 내 위치 커스텀 아이콘 */
-        const myImageSrc =
-          "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_blue.png";
-
-        const myImageSize = new window.kakao.maps.Size(40, 40);
-        const myMarkerImage = new window.kakao.maps.MarkerImage(
-          myImageSrc,
-          myImageSize
-        );
+        myLocationRef.current = { lat, lng };
 
         if (myMarkerRef.current) {
           myMarkerRef.current.setMap(null);
         }
 
+        const imageSize = new window.kakao.maps.Size(40, 40);
+
+        const markerImage = new window.kakao.maps.MarkerImage(
+          myLocationIcon,
+          imageSize,
+          { offset: new window.kakao.maps.Point(20, 20) }
+        );
+
         const marker = new window.kakao.maps.Marker({
           position: moveLatLng,
-          image: myMarkerImage,
+          image: markerImage,
         });
 
         marker.setMap(map);
@@ -146,6 +142,11 @@ export default function MapView() {
     );
   };
 
+  /* 🔥 부모(Home)에서 호출 가능하게 노출 */
+  useImperativeHandle(ref, () => ({
+    moveToMyLocation,
+  }));
+
   return (
     <section className="gl-card gl-mapCard">
       <div className="gl-mapWrapper">
@@ -156,5 +157,6 @@ export default function MapView() {
       </div>
     </section>
   );
-}
+});
 
+export default MapView;

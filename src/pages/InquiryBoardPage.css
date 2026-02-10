@@ -18,6 +18,7 @@
   justify-content: space-between;
   margin-bottom: 25px;
   gap: 15px;
+  background: transparent !important; /* 배경 투명화 */
 }
 
 .gl-inquiry-search-box {

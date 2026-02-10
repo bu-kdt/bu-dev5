@@ -8,6 +8,7 @@ export default function FilterView({
   radiusKm,
   setRadiusKm,
   onReset,
+  onMoveToMyLocation
 }) {
   return (
     <aside className="gl-card gl-filterCard">
@@ -42,9 +43,10 @@ export default function FilterView({
           </label>
         ))}
       </div>
-
+      
       <div className="gl-filterBtns">
-        <button className="gl-btn gl-btnOutline" onClick={() => alert("현재 위치 업데이트(샘플)")} type="button">
+        <button className="gl-btn gl-btnOutline" onClick={onMoveToMyLocation}
+           type="button">
           현재 위치 업데이트
         </button>
         <button className="gl-btn gl-btnGhost" onClick={onReset} type="button">
