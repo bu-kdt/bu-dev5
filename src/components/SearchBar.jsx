@@ -1,16 +1,26 @@
 import React from "react";
-import { FaMagnifyingGlass } from "react-icons/fa6"; // [수정] 아이콘 임포트 추가
+import { FaMagnifyingGlass } from "react-icons/fa6";
 import "./SearchBar.css";
 
-export default function SearchBar({ q, setQ }) {
+export default function SearchBar({ q, setQ, searchType, setSearchType, onSearch }) {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      onSearch && onSearch();
+    }
+  };
+
   return (
     <section className="gl-searchBarWrap">
       <div className="gl-searchBar">
         {/* 왼쪽 셀렉트 박스 영역 */}
-        <select className="gl-searchSelect">
-          <option>전체</option>
-          <option>병원명</option>
-          <option>지역</option>
+        <select 
+          className="gl-searchSelect"
+          value={searchType}
+          onChange={(e) => setSearchType(e.target.value)}
+        >
+          <option value="all">전체</option>
+          <option value="name">병원명</option>
+          <option value="address">주소</option>
         </select>
         
         {/* 중앙 구분선 */}
@@ -18,13 +28,17 @@ export default function SearchBar({ q, setQ }) {
         
         {/* 오른쪽 입력 영역 */}
         <div className="gl-searchInputInner">
-          {/* [수정] 텍스트 이모지를 FaMagnifyingGlass 컴포넌트로 변경 */}
           <FaMagnifyingGlass className="gl-searchIcon" />
           <input
             className="gl-searchInput"
-            placeholder="병원명/지역/주소 검색"
+            placeholder={
+              searchType === "name" ? "병원명 검색" :
+              searchType === "address" ? "주소 검색" :
+              "병원명/주소 검색"
+            }
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         </div>
       </div>

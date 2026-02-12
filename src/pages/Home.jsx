@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import Header from "../components/Header";
 import MegaMenu from "../components/MegaMenu";
 import SearchBar from "../components/SearchBar";
@@ -6,6 +6,7 @@ import FilterView from "../components/FilterView";
 import MapView from "../components/MapView";
 import ResultView from "../components/ResultView";
 import Bookmark from "../components/Bookmark";
+import EmergencyButton from "../components/EmergencyButton"; // ✅ 추가
 
 // 페이지 컴포넌트 임포트
 import IntroducePage from "./IntroducePage";
@@ -16,247 +17,802 @@ import EmergencyPrinciplesPage from "./EmergencyPrinciplesPage";
 import SituationFirstAidPage from "./SituationFirstAidPage";
 import AEDGuidePage from "./AEDGuidePage";
 import AEDVideoPage from "./AEDVideoPage";
-import BoardWritePostPage from "./BoardWritePostPage"; 
-import PostDetailPage from "./PostDetailPage"; 
-import InquiryBoardWritePostPage from "./InquiryBoardWritePostPage"; 
-import InquiryPostDetailPage from "./InquiryPostDetailPage"; 
-
-// ✅ 공지사항 관련 페이지 임포트
+import BoardWritePostPage from "./BoardWritePostPage";
+import PostDetailPage from "./PostDetailPage";
+import InquiryBoardWritePostPage from "./InquiryBoardWritePostPage";
+import InquiryPostDetailPage from "./InquiryPostDetailPage";
 import NoticeBoardWritePostPage from "./NoticeBoardWritePostPage";
 import NoticeBoardDetailPage from "./NoticeBoardDetailPage";
 
-// 스타일 임포트
 import "../styles/components.css";
 
-import useHospitalResults from "../hooks/useHospitalResults";
-import sampleHospitals from "../data/SampleHospitals";
-
 export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
+  const API_BASE_URL = "http://localhost:8080";
+
   const [activeMenu, setActiveMenu] = useState(null);
   const [showMega, setShowMega] = useState(false);
 
+  // ✅ 검색/필터 상태
+  const [q, setQ] = useState("");
+  const [searchType, setSearchType] = useState("all");
+  const [onlyOpen, setOnlyOpen] = useState(false);
+  const [includeClothes, setIncludeClothes] = useState(false);
+  const [radiusKm, setRadiusKm] = useState(3);
+
+  // ✅ 정렬
+  const [sortMode, setSortMode] = useState("거리");
+
+  // ✅ 지도/결과 패널 UI
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
+  const [isResultOpen, setIsResultOpen] = useState(true);
+
+  // ✅ MapView에서 올려주는 병원 리스트
+  const [hospitals, setHospitals] = useState([]);
+
+  // ✅ 내 위치
+  const [myLocation, setMyLocation] = useState(null);
+
+  // ✅ 북마크
+  const [bookmarkOpen, setBookmarkOpen] = useState(false);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
+  // ✅ 게시판 라우팅/상태
+  const [viewMode, setViewMode] = useState("search");
+  const [selectedPostId, setSelectedPostId] = useState(null);
+  const [editingPost, setEditingPost] = useState(null);
+
+  // ✅ 게시판 데이터 상태
+  const [posts, setPosts] = useState([]);
+  const [notices, setNotices] = useState([]);
+  const [inquiries, setInquiries] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // ✅ 페이징 상태
+  const [postsPaging, setPostsPaging] = useState({
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+  });
+  const [noticesPaging, setNoticesPaging] = useState({
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+  });
+  const [inquiriesPaging, setInquiriesPaging] = useState({
+    currentPage: 0,
+    totalPages: 0,
+    totalElements: 0,
+  });
+
+  // ✅ 검색 상태
+  const [postsSearch, setPostsSearch] = useState({ type: "전체", keyword: "" });
+  const [noticesSearch, setNoticesSearch] = useState({ type: "전체", keyword: "" });
+  const [inquiriesSearch, setInquiriesSearch] = useState({ type: "전체", keyword: "" });
+
   const mapRef = useRef(null);
+
+  // =========================
+  // ✅ MapView 제어
+  // =========================
+  const handleSearch = () => {
+    if (!q.trim()) {
+      handleShowAllHospitals();
+      return;
+    }
+
+    if (mapRef.current) {
+      if (searchType === "name") {
+        mapRef.current.searchByName(q.trim());
+      } else if (searchType === "address") {
+        mapRef.current.searchByAddress(q.trim());
+      } else {
+        mapRef.current.searchByName(q.trim());
+      }
+    }
+  };
+
+  const handleSearchNearby = () => {
+    if (mapRef.current) {
+      mapRef.current.searchNearby();
+    }
+  };
+
   const handleMoveToMyLocation = () => {
     if (mapRef.current) {
       mapRef.current.moveToMyLocation();
     }
   };
-  
-  // ✅ 화면 모드 및 게시글 상태 관리
-  const [viewMode, setViewMode] = useState("search");
-  const [selectedPostId, setSelectedPostId] = useState(null);
 
-  // ✅ 1. 정보공유 게시판 데이터 상태 (댓글 실시간 연동)
-  const [posts, setPosts] = useState([
-    { id: 1, title: "병원 예약 시 유용한 팁 공유합니다", content: "진료 전 미리 문진표를 작성해두세요.", comments: [], author: "user123", views: 342, likes: 45, date: "02-07" },
-    { id: 2, title: "강남구 소아과 추천 부탁드립니다", content: "밤 9시까지 하는 곳 아시는 분?", comments: [], author: "parent_mom", views: 189, likes: 23, date: "02-06" },
-    { id: 3, title: "건강검진 후기 - 서울대학교병원", content: "시설이 정말 깨끗하고 시스템이 체계적입니다.", comments: [], author: "healthy_life", views: 456, likes: 67, date: "02-05" },
-    { id: 4, title: "야간 진료 가능한 병원 정보 공유", content: "강남권역 24시간 진료 리스트입니다.", comments: [], author: "nightworker", views: 523, likes: 89, date: "02-04" },
-  ]);
-
-  // ✅ 2. 관리자 문의 게시판 데이터 상태 (상세 내용 및 답변 필드 보존)
-  const [inquiries, setInquiries] = useState([
-    { id: 1, status: "완료", title: "비밀번호를 잊어버렸어요", content: "로그인 비밀번호를 찾을 수가 없습니다.", author: "김철수", date: "02-09", isPrivate: true, views: 5, reply: "비밀번호가 초기화되었습니다." },
-    { id: 2, status: "대기", title: "예약 시스템 오류 문의", content: "병원 예약 버튼이 작동하지 않습니다.", author: "이영희", date: "02-08", isPrivate: false, views: 12, reply: null },
-  ]);
-
-  // ✅ 3. 공지사항 데이터 상태 (상단 고정 기능 포함)
-  const [notices, setNotices] = useState([
-    { id: 101, title: "2024년 겨울철 응급실 운영시간 안내", content: "운영시간 안내 내용입니다.", author: "root", views: 1245, date: "02-01", isPinned: true },
-    { id: 102, title: "[중요] 개인정보 처리방침 변경 안내", content: "처리방침 변경 안내입니다.", author: "root", views: 892, date: "01-28", isPinned: true },
-    { id: 1, title: "AED(자동심장충격기) 위치 안내", content: "AED 위치 안내 내용입니다.", author: "root", views: 567, date: "01-25", isPinned: false },
-    { id: 2, title: "설 연휴 진료 일정 안내", content: "연휴 진료 일정 내용입니다.", author: "root", views: 1834, date: "01-20", isPinned: false },
-  ]);
-
-  // 병원 검색 필터 및 결과창 토글 상태 (기존 로직 유지)
-  const [isFilterOpen, setIsFilterOpen] = useState(true);
-  const [isResultOpen, setIsResultOpen] = useState(true);
-
-  const {
-    q, setQ, onlyOpen, setOnlyOpen, includeClothes, setIncludeClothes,
-    radiusKm, setRadiusKm, sortMode, setSortMode, resetFilters,
-    filtered, bookmarkOpen, setBookmarkOpen, bookmarks, addBookmark, removeBookmark, isBookmarked,
-  } = useHospitalResults({ hospitals: sampleHospitals, user });
-
-  // ✅ 메뉴 클릭 핸들러
-  const handleMenuClick = (label) => {
-    if (label === "소개글" || label === "서비스 소개") setViewMode("intro");
-    else if (label === "병원/응급실 찾기" || label === "실시간 검색") setViewMode("search");
-    else if (label === "공지사항" || label === "전체 공지") {
-      setSelectedPostId(null);
-      setViewMode("notice");
+  const handleShowAllHospitals = () => {
+    if (mapRef.current) {
+      mapRef.current.searchByName("");
     }
-    else if (label === "정보공유 게시판") {
-      setSelectedPostId(null);
+  };
+
+  const handleSearchByRadius = () => {
+    if (mapRef.current) {
+      mapRef.current.searchNearby();
+    }
+  };
+
+  const resetFilters = () => {
+    setOnlyOpen(false);
+    setIncludeClothes(false);
+    setRadiusKm(3);
+  };
+
+  // =========================
+  // ✅ 북마크 API
+  // =========================
+  const fetchBookmarks = async () => {
+    if (!user) return;
+    try {
+      setBookmarkLoading(true);
+      const res = await fetch(`${API_BASE_URL}/api/bookmarks`, {
+        credentials: "include",
+      });
+
+      if (res.status === 401) {
+        setBookmarks([]);
+        return;
+      }
+
+      if (!res.ok) {
+        const t = await res.text();
+        console.error("즐겨찾기 조회 실패:", t);
+        setBookmarks([]);
+        return;
+      }
+
+      const data = await res.json();
+      setBookmarks(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("즐겨찾기 조회 오류:", e);
+      setBookmarks([]);
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
+
+  const isBookmarked = (hid) => {
+    if (!hid) return false;
+    return bookmarks.some((b) => b?.hid === hid);
+  };
+
+  const addBookmark = async (h) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      onGoLogin?.();
+      return;
+    }
+
+    const hid = h?.hid;
+    const hname = h?.hname;
+    if (!hid || !hname) {
+      alert("병원 정보가 올바르지 않습니다.");
+      return;
+    }
+
+    if (isBookmarked(hid)) return;
+
+    const payload = {
+      hid: String(hid),
+      hname: String(hname),
+      haddress: h?.haddress ?? null,
+      htel: h?.htel ?? null,
+      hlat: h?.hlat != null ? Number(h.hlat) : null,
+      hlon: h?.hlon != null ? Number(h.hlon) : null,
+      distance: h?.distance != null ? Number(h.distance) : null,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/bookmarks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 401) {
+        alert("로그인이 필요합니다.");
+        onGoLogin?.();
+        return;
+      }
+
+      if (!res.ok) {
+        const t = await res.text();
+        console.error("즐겨찾기 추가 실패:", t);
+        alert("즐겨찾기 추가에 실패했습니다.");
+        return;
+      }
+
+      const created = await res.json();
+      setBookmarks((prev) => [created, ...prev]);
+    } catch (e) {
+      console.error("즐겨찾기 추가 오류:", e);
+      alert("서버와 연결할 수 없습니다.");
+    }
+  };
+
+  const removeBookmark = async (hid) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      onGoLogin?.();
+      return;
+    }
+    if (!hid) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/bookmarks/${encodeURIComponent(String(hid))}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (res.status === 401) {
+        alert("로그인이 필요합니다.");
+        onGoLogin?.();
+        return;
+      }
+
+      if (!res.ok) {
+        const t = await res.text();
+        console.error("즐겨찾기 삭제 실패:", t);
+        alert("즐겨찾기 삭제에 실패했습니다.");
+        return;
+      }
+
+      setBookmarks((prev) => prev.filter((b) => b.hid !== hid));
+    } catch (e) {
+      console.error("즐겨찾기 삭제 오류:", e);
+      alert("서버와 연결할 수 없습니다.");
+    }
+  };
+
+  useEffect(() => {
+    if (user && bookmarkOpen) {
+      fetchBookmarks();
+    }
+  }, [user, bookmarkOpen]);
+
+  // =========================
+  // ✅ 정렬
+  // =========================
+  const resultList = useMemo(() => {
+    if (!hospitals || hospitals.length === 0) return [];
+    const arr = [...hospitals];
+
+    if (sortMode === "거리") {
+      arr.sort((a, b) => {
+        const distA = a?.distance ?? Infinity;
+        const distB = b?.distance ?? Infinity;
+        return distA - distB;
+      });
+    } else if (sortMode === "이름") {
+      arr.sort((a, b) => {
+        const nameA = a?.hname ?? "";
+        const nameB = b?.hname ?? "";
+        return nameA.localeCompare(nameB, "ko-KR");
+      });
+    }
+
+    return arr;
+  }, [hospitals, sortMode]);
+
+  const onToggleSort = () => {
+    setSortMode((prev) => (prev === "거리" ? "이름" : "거리"));
+  };
+
+  // =========================
+  // ✅ 게시판 메뉴
+  // =========================
+  const handleMenuClick = (item) => {
+    if (item.label === "서비스 소개") {
+      setViewMode("intro");
+    } else if (item.label === "실시간 검색") {
+      setViewMode("search");
+    } else if (item.label === "행동원칙") {
+      setViewMode("principles");
+    } else if (item.label === "상황별 처치") {
+      setViewMode("situations");
+    } else if (item.label === "AED 사용법") {
+      setViewMode("aedGuide");
+    } else if (item.label === "AED 사용설명 동영상") {
+      setViewMode("aedVideo");
+    } else if (item.label === "정보공유 게시판") {
       setViewMode("infoBoard");
-    }
-    else if (label === "관리자 문의 게시판") {
-      setSelectedPostId(null);
+      loadBoardData("INFO", 0, 10, postsSearch.type, postsSearch.keyword, setPosts, setPostsPaging);
+    } else if (item.label === "관리자 문의 게시판") {
       setViewMode("inquiryBoard");
+      loadBoardData("QNA", 0, 10, inquiriesSearch.type, inquiriesSearch.keyword, setInquiries, setInquiriesPaging);
+    } else if (item.label === "전체 공지") {
+      setViewMode("notice");
+      loadBoardData("NOTICE", 0, 10, noticesSearch.type, noticesSearch.keyword, setNotices, setNoticesPaging);
     }
-    else if (label === "행동원칙") setViewMode("principles");
-    else if (label === "상황별 처치") setViewMode("situation");
-    else if (label === "AED 사용법") setViewMode("aedGuide");
-    else if (label === "AED 사용설명 동영상") setViewMode("aedVideo");
-    setShowMega(false);
   };
 
-  // ✅ 핸들러: 공지사항 생성
-  const handleCreateNotice = (newNoticeData) => {
-    const newNotice = {
-      id: notices.length > 0 ? Math.max(...notices.map(n => n.id)) + 1 : 1,
-      title: newNoticeData.title,
-      content: newNoticeData.content,
-      author: "root", 
-      views: 0,
-      date: new Date().toISOString().slice(5, 10),
-      isPinned: newNoticeData.isPinned,
-    };
-    setNotices([newNotice, ...notices]);
-    setViewMode("notice");
+  // =========================
+  // ✅ 게시판 API
+  // =========================
+  const loadBoardData = async (boardType, page, size, searchType, keyword, setPosts, setPaging) => {
+    try {
+      setLoading(true);
+
+      const searchTypeMap = {
+        전체: "ALL",
+        제목: "TITLE",
+        내용: "CONTENT",
+        작성자: "AUTHOR",
+      };
+      const backendSearchType = searchTypeMap[searchType] || "ALL";
+
+      let url = `${API_BASE_URL}/api/board/${boardType}/posts?page=${page}&size=${size}&sort=createdAt,desc`;
+      if (keyword && keyword.trim()) {
+        url += `&searchType=${backendSearchType}&keyword=${encodeURIComponent(keyword.trim())}`;
+      }
+
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error(`게시글 로드 실패 (${res.status})`);
+
+      const data = await res.json();
+      setPosts(data.content || []);
+      setPaging({
+        currentPage: data.number || 0,
+        totalPages: data.totalPages || 0,
+        totalElements: data.totalElements || 0,
+      });
+    } catch (e) {
+      console.error("게시글 로드 오류:", e);
+      alert("게시글을 불러오는 중 오류가 발생했습니다.");
+      setPosts([]);
+      setPaging({ currentPage: 0, totalPages: 0, totalElements: 0 });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ✅ 핸들러: 정보공유 게시글 생성
-  const handleCreatePost = (newPostData) => {
-    const newPost = {
-      id: posts.length > 0 ? Math.max(...posts.map(p => p.id)) + 1 : 1,
-      title: newPostData.title,
-      content: newPostData.content,
-      author: user.name, 
-      comments: [],
-      views: 0,
-      likes: 0,
-      date: new Date().toISOString().slice(5, 10),
-    };
-    setPosts([newPost, ...posts]);
-    setViewMode("infoBoard");
+  const handlePageChange = (boardType, page) => {
+    if (boardType === "INFO") {
+      loadBoardData("INFO", page, 10, postsSearch.type, postsSearch.keyword, setPosts, setPostsPaging);
+    } else if (boardType === "NOTICE") {
+      loadBoardData("NOTICE", page, 10, noticesSearch.type, noticesSearch.keyword, setNotices, setNoticesPaging);
+    } else if (boardType === "QNA") {
+      loadBoardData("QNA", page, 10, inquiriesSearch.type, inquiriesSearch.keyword, setInquiries, setInquiriesPaging);
+    }
   };
 
-  // ✅ 핸들러: 관리자 문의글 생성
-  const handleCreateInquiry = (newInquiryData) => {
-    const newInquiry = {
-      id: inquiries.length > 0 ? Math.max(...inquiries.map(i => i.id)) + 1 : 1,
-      title: newInquiryData.title,
-      content: newInquiryData.content,
-      author: user.name, 
-      date: new Date().toISOString().slice(5, 10),
-      isPrivate: newInquiryData.isPrivate,
-      status: "대기",
-      reply: null,
-      views: 0
-    };
-    setInquiries([newInquiry, ...inquiries]);
-    setViewMode("inquiryBoard");
+  const handleSearchChange = (boardType, searchType, keyword) => {
+    if (boardType === "INFO") {
+      setPostsSearch({ type: searchType, keyword });
+      loadBoardData("INFO", 0, 10, searchType, keyword, setPosts, setPostsPaging);
+    } else if (boardType === "NOTICE") {
+      setNoticesSearch({ type: searchType, keyword });
+      loadBoardData("NOTICE", 0, 10, searchType, keyword, setNotices, setNoticesPaging);
+    } else if (boardType === "QNA") {
+      setInquiriesSearch({ type: searchType, keyword });
+      loadBoardData("QNA", 0, 10, searchType, keyword, setInquiries, setInquiriesPaging);
+    }
   };
 
-  // ✅ 핸들러: 게시글 선택
-  const handleSelectPost = (post) => {
-    setSelectedPostId(post.id);
+  const handleCreatePost = async (title, content) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      onGoLogin?.();
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/board/INFO/posts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title, content }),
+      });
+
+      if (res.status === 401) {
+        alert("로그인이 필요합니다.");
+        onGoLogin?.();
+        return;
+      }
+
+      if (!res.ok) throw new Error(`게시글 작성 실패 (${res.status})`);
+
+      alert("게시글이 등록되었습니다.");
+      await loadBoardData("INFO", postsPaging.currentPage, 10, postsSearch.type, postsSearch.keyword, setPosts, setPostsPaging);
+      setViewMode("infoBoard");
+    } catch (e) {
+      console.error("게시글 작성 오류:", e);
+      alert("게시글 작성 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleAddComment = async (postId, content) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      onGoLogin?.();
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/board/INFO/posts/${postId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content }),
+      });
+
+      if (res.status === 401) {
+        alert("로그인이 필요합니다.");
+        onGoLogin?.();
+        return;
+      }
+
+      if (!res.ok) throw new Error(`댓글 추가 실패 (${res.status})`);
+
+      alert("댓글이 등록되었습니다.");
+      await loadBoardData("INFO", postsPaging.currentPage, 10, postsSearch.type, postsSearch.keyword, setPosts, setPostsPaging);
+    } catch (e) {
+      console.error("댓글 추가 오류:", e);
+      alert("댓글 추가 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleEditPost = (post, boardType) => {
+    setEditingPost(post);
+    if (boardType === "INFO") {
+      setViewMode("writePost");
+    } else if (boardType === "NOTICE") {
+      setViewMode("noticeWrite");
+    } else if (boardType === "QNA") {
+      setViewMode("inquiryWrite");
+    }
+  };
+
+  const handleDeleteBoard = async (boardType, postId, setPosts, setPaging) => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/board/${boardType}/posts/${postId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (res.status === 401) {
+        alert("로그인이 필요합니다.");
+        onGoLogin?.();
+        return;
+      }
+
+      if (!res.ok) throw new Error(`게시글 삭제 실패 (${res.status})`);
+
+      alert("삭제되었습니다.");
+
+      if (boardType === "INFO") {
+        await loadBoardData("INFO", postsPaging.currentPage, 10, postsSearch.type, postsSearch.keyword, setPosts, setPaging);
+        setViewMode("infoBoard");
+      } else if (boardType === "NOTICE") {
+        await loadBoardData("NOTICE", noticesPaging.currentPage, 10, noticesSearch.type, noticesSearch.keyword, setPosts, setPaging);
+        setViewMode("notice");
+      } else if (boardType === "QNA") {
+        await loadBoardData("QNA", inquiriesPaging.currentPage, 10, inquiriesSearch.type, inquiriesSearch.keyword, setPosts, setPaging);
+        setViewMode("inquiryBoard");
+      }
+    } catch (e) {
+      console.error("게시글 삭제 오류:", e);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleSelectPost = (id) => {
+    setSelectedPostId(id);
     setViewMode("postDetail");
   };
 
-  // ✅ 핸들러: 댓글 추가
-  const handleAddComment = (postId, commentText) => {
-    setPosts(prevPosts => prevPosts.map(post => 
-      post.id === postId ? { ...post, comments: [...post.comments, { id: Date.now(), author: user?.name || "guest", text: commentText, date: "방금 전" }] } : post
-    ));
+  const handleSelectInquiry = (id) => {
+    setSelectedPostId(id);
+    setViewMode("inquiryDetail");
   };
 
-  // ✅ 핸들러: 관리자 답변 등록
-  const handleAdminReply = (inquiryId, replyText) => {
-    setInquiries(prev => prev.map(item => 
-      item.id === inquiryId ? { ...item, reply: replyText, status: "완료" } : item
-    ));
+  const handleCreateNotice = async (title, content) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/board/NOTICE/posts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title, content }),
+      });
+
+      if (res.status === 401) {
+        alert("로그인이 필요합니다.");
+        onGoLogin?.();
+        return;
+      }
+
+      if (!res.ok) throw new Error(`공지사항 작성 실패 (${res.status})`);
+
+      alert("공지사항이 등록되었습니다.");
+      await loadBoardData("NOTICE", noticesPaging.currentPage, 10, noticesSearch.type, noticesSearch.keyword, setNotices, setNoticesPaging);
+      setViewMode("notice");
+    } catch (e) {
+      console.error("공지사항 작성 오류:", e);
+      alert("공지사항 작성 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleCreateInquiry = async (title, content) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      onGoLogin?.();
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/board/QNA/posts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title, content }),
+      });
+
+      if (res.status === 401) {
+        alert("로그인이 필요합니다.");
+        onGoLogin?.();
+        return;
+      }
+
+      if (!res.ok) throw new Error(`문의하기 작성 실패 (${res.status})`);
+
+      alert("문의가 등록되었습니다.");
+      await loadBoardData("QNA", inquiriesPaging.currentPage, 10, inquiriesSearch.type, inquiriesSearch.keyword, setInquiries, setInquiriesPaging);
+      setViewMode("inquiryBoard");
+    } catch (e) {
+      console.error("문의하기 작성 오류:", e);
+      alert("문의하기 작성 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleAdminReply = async (inquiryId, replyText) => {
     alert("답변이 등록되었습니다.");
+    await loadBoardData("QNA", inquiriesPaging.currentPage, 10, inquiriesSearch.type, inquiriesSearch.keyword, setInquiries, setInquiriesPaging);
     setViewMode("inquiryBoard");
   };
 
-  const menuItems = useMemo(() => [
-    { label: "소개글", href: "#", subItems: [{ label: "서비스 소개", href: "#" }] },
-    { label: "병원/응급실 찾기", href: "#", subItems: [{ label: "실시간 검색", href: "#" }] },
-    { label: "응급처치 요령", href: "#", subItems: [{ label: "행동원칙", href: "#" }, { label: "상황별 처치", href: "#" }] },
-    { label: "AED", href: "#", subItems: [{ label: "AED 사용법", href: "#" }, { label: "AED 사용설명 동영상", href: "#" }] },
-    { label: "게시판", href: "#", subItems: [{ label: "정보공유 게시판", href: "#" }, { label: "관리자 문의 게시판", href: "#" }] },
-    { label: "공지사항", href: "#", subItems: [{ label: "전체 공지", href: "#" }] },
-  ], []);
+  const menuItems = useMemo(
+    () => [
+      { label: "소개글", href: "#", subItems: [{ label: "서비스 소개", href: "#" }] },
+      { label: "병원/응급실 찾기", href: "#", subItems: [{ label: "실시간 검색", href: "#" }] },
+      {
+        label: "응급처치 요령",
+        href: "#",
+        subItems: [
+          { label: "행동원칙", href: "#" },
+          { label: "상황별 처치", href: "#" },
+        ],
+      },
+      {
+        label: "AED",
+        href: "#",
+        subItems: [
+          { label: "AED 사용법", href: "#" },
+          { label: "AED 사용설명 동영상", href: "#" },
+        ],
+      },
+      {
+        label: "게시판",
+        href: "#",
+        subItems: [
+          { label: "정보공유 게시판", href: "#" },
+          { label: "관리자 문의 게시판", href: "#" },
+        ],
+      },
+      { label: "공지사항", href: "#", subItems: [{ label: "전체 공지", href: "#" }] },
+    ],
+    []
+  );
 
   return (
     <div className="gl-page">
       <header className="gl-header">
         <div className="gl-header-inner">
-          <Header user={user} onLogout={onLogout} onGoLogin={onGoLogin} onGoHome={() => { setViewMode("search"); onGoHome(); }} onOpenBookmark={() => setBookmarkOpen(true)} />
-          <MegaMenu menuItems={menuItems} activeMenu={activeMenu} setActiveMenu={setActiveMenu} showMega={showMega} setShowMega={setShowMega} onMenuClick={handleMenuClick} />
+          <Header
+            user={user}
+            onLogout={onLogout}
+            onGoLogin={onGoLogin}
+            onGoHome={() => {
+              setViewMode("search");
+              onGoHome?.();
+            }}
+            onOpenBookmark={() => setBookmarkOpen(true)}
+          />
+          <MegaMenu
+            menuItems={menuItems}
+            activeMenu={activeMenu}
+            setActiveMenu={setActiveMenu}
+            showMega={showMega}
+            setShowMega={setShowMega}
+            onMenuClick={handleMenuClick}
+          />
         </div>
       </header>
 
-      <Bookmark open={bookmarkOpen && !!user} onClose={() => setBookmarkOpen(false)} bookmarks={bookmarks} onRemove={removeBookmark} />
-      
-      {viewMode === "search" && <SearchBar q={q} setQ={setQ} />}
+      <Bookmark
+        open={bookmarkOpen && !!user}
+        onClose={() => setBookmarkOpen(false)}
+        bookmarks={bookmarks}
+        loading={bookmarkLoading}
+        onRemove={removeBookmark}
+      />
 
-      {/* ✅ 조건부 렌더링 영역 (모든 요구사항 통합) */}
+      {/* ✅ 응급 버튼 (props 없음! 자동으로 위치와 병원 검색) */}
+      <EmergencyButton />
+
+      {viewMode === "search" && (
+        <SearchBar
+          q={q}
+          setQ={setQ}
+          searchType={searchType}
+          setSearchType={setSearchType}
+          onSearch={handleSearch}
+        />
+      )}
+
       {viewMode === "search" ? (
-        <main className={`gl-main ${!isFilterOpen ? "is-filter-closed" : ""} ${!isResultOpen ? "is-result-closed" : ""}`}>
+        <main
+          className={`gl-main ${!isFilterOpen ? "is-filter-closed" : ""} ${
+            !isResultOpen ? "is-result-closed" : ""
+          }`}
+        >
           {isFilterOpen ? (
-            <FilterView onlyOpen={onlyOpen} setOnlyOpen={setOnlyOpen} includeClothes={includeClothes} setIncludeClothes={setIncludeClothes} radiusKm={radiusKm} setRadiusKm={setRadiusKm} onReset={resetFilters} onClose={() => setIsFilterOpen(false)} onMoveToMyLocation={handleMoveToMyLocation} />
+            <FilterView
+              onlyOpen={onlyOpen}
+              setOnlyOpen={setOnlyOpen}
+              includeClothes={includeClothes}
+              setIncludeClothes={setIncludeClothes}
+              radiusKm={radiusKm}
+              setRadiusKm={setRadiusKm}
+              onReset={resetFilters}
+              onClose={() => setIsFilterOpen(false)}
+              onMoveToMyLocation={handleMoveToMyLocation}
+              onShowAllHospitals={handleShowAllHospitals}
+              onSearchByRadius={handleSearchByRadius}
+            />
           ) : (
-            <button className="gl-open-toggle-btn gl-toggle-filter" onClick={() => setIsFilterOpen(true)}>› 필터</button>
+            <button
+              className="gl-open-toggle-btn gl-toggle-filter"
+              onClick={() => setIsFilterOpen(true)}
+            >
+              › 필터
+            </button>
           )}
-          <MapView ref={mapRef} />
+
+          <MapView
+            ref={mapRef}
+            onlyOpen={onlyOpen}
+            includeClothes={includeClothes}
+            radiusKm={radiusKm}
+            onHospitalsLoaded={(list) => setHospitals(Array.isArray(list) ? list : [])}
+            onLocationChange={setMyLocation}
+          />
+
           {isResultOpen ? (
-            <ResultView user={user} items={filtered} sortMode={sortMode} onToggleSort={() => setSortMode(p => p === "추천" ? "거리" : "추천")} isBookmarked={isBookmarked} onAddBookmark={addBookmark} onRemoveBookmark={removeBookmark} onClose={() => setIsResultOpen(false)} />
+            <ResultView
+              user={user}
+              hospitals={resultList}
+              sortMode={sortMode}
+              onToggleSort={onToggleSort}
+              isBookmarked={isBookmarked}
+              onAddBookmark={addBookmark}
+              onRemoveBookmark={removeBookmark}
+              myLocation={myLocation}
+            />
           ) : (
-            <button className="gl-open-toggle-btn gl-toggle-result" onClick={() => setIsResultOpen(true)}>‹ 추천결과</button>
+            <button
+              className="gl-open-toggle-btn gl-toggle-result"
+              onClick={() => setIsResultOpen(true)}
+            >
+              ‹ 추천결과
+            </button>
           )}
         </main>
       ) : viewMode === "intro" ? (
         <IntroducePage />
       ) : viewMode === "notice" ? (
-        /* ✅ 공지사항 목록: 관리자 여부 전달 */
-        <NoticePage 
-          notices={notices} 
-          isAdmin={user?.isAdmin} 
-          onWrite={() => setViewMode("noticeWrite")} 
-          onSelectNotice={(id) => { setSelectedPostId(id); setViewMode("noticeDetail"); }}
+        <NoticePage
+          notices={notices}
+          paging={noticesPaging}
+          isAdmin={user?.isAdmin}
+          onWrite={() => {
+            setEditingPost(null);
+            setViewMode("noticeWrite");
+          }}
+          onSelectNotice={(id) => {
+            setSelectedPostId(id);
+            setEditingPost(null);
+            setViewMode("noticeDetail");
+          }}
+          onSearch={(searchType, keyword) => handleSearchChange("NOTICE", searchType, keyword)}
+          onPageChange={(page) => handlePageChange("NOTICE", page)}
         />
       ) : viewMode === "noticeWrite" ? (
-        /* ✅ 공지사항 작성 */
-        <NoticeBoardWritePostPage onBack={() => setViewMode("notice")} onCreateNotice={handleCreateNotice} />
+        <NoticeBoardWritePostPage
+          onBack={() => setViewMode("notice")}
+          onCreateNotice={handleCreateNotice}
+          editingPost={editingPost}
+        />
       ) : viewMode === "noticeDetail" ? (
-        /* ✅ 공지사항 상세 */
-        <NoticeBoardDetailPage 
-          post={notices.find(n => n.id === selectedPostId)} 
-          onBack={() => setViewMode("notice")} 
+        <NoticeBoardDetailPage
+          post={notices.find((n) => n.id === selectedPostId)}
+          user={user}
+          onBack={() => setViewMode("notice")}
+          onEdit={(post) => handleEditPost(post, "NOTICE")}
+          onDelete={(postId) => handleDeleteBoard("NOTICE", postId, setNotices, setNoticesPaging)}
         />
       ) : viewMode === "infoBoard" ? (
-        <InfoBoardPage 
-          posts={posts} 
+        <InfoBoardPage
+          posts={posts}
+          paging={postsPaging}
+          loading={loading}
           onWrite={() => {
-            if (!user) { alert("로그인이 필요합니다."); onGoLogin(); return; }
+            if (!user) {
+              alert("로그인이 필요합니다.");
+              onGoLogin?.();
+              return;
+            }
+            setEditingPost(null);
             setViewMode("writePost");
-          }} 
-          onSelectPost={handleSelectPost} 
+          }}
+          onSelectPost={handleSelectPost}
+          onSearch={(searchType, keyword) => handleSearchChange("INFO", searchType, keyword)}
+          onPageChange={(page) => handlePageChange("INFO", page)}
         />
       ) : viewMode === "writePost" ? (
-        <BoardWritePostPage onBack={() => setViewMode("infoBoard")} user={user} onCreatePost={handleCreatePost} />
+        <BoardWritePostPage
+          onBack={() => setViewMode("infoBoard")}
+          user={user}
+          onCreatePost={handleCreatePost}
+          editingPost={editingPost}
+        />
       ) : viewMode === "postDetail" ? (
-        <PostDetailPage post={posts.find(p => p.id === selectedPostId)} onBack={() => setViewMode("infoBoard")} onAddComment={handleAddComment} />
+        <PostDetailPage
+          post={posts.find((p) => p.id === selectedPostId)}
+          user={user}
+          onBack={() => setViewMode("infoBoard")}
+          onAddComment={handleAddComment}
+          onEdit={(post) => handleEditPost(post, "INFO")}
+          onDelete={(postId) => handleDeleteBoard("INFO", postId, setPosts, setPostsPaging)}
+        />
       ) : viewMode === "inquiryBoard" ? (
-        <InquiryBoardPage 
-          inquiries={inquiries} 
+        <InquiryBoardPage
+          inquiries={inquiries}
+          paging={inquiriesPaging}
           onWrite={() => {
-            if (!user) { alert("문의하기는 로그인 후 가능합니다."); onGoLogin(); return; }
+            if (!user) {
+              alert("문의하기는 로그인 후 가능합니다.");
+              onGoLogin?.();
+              return;
+            }
+            setEditingPost(null);
             setViewMode("inquiryWrite");
-          }} 
-          onSelectInquiry={(id) => { setSelectedPostId(id); setViewMode("inquiryDetail"); }}
+          }}
+          onSelectInquiry={handleSelectInquiry}
+          onSearch={(searchType, keyword) => handleSearchChange("QNA", searchType, keyword)}
+          onPageChange={(page) => handlePageChange("QNA", page)}
         />
       ) : viewMode === "inquiryWrite" ? (
-        <InquiryBoardWritePostPage onBack={() => setViewMode("inquiryBoard")} user={user} onCreateInquiry={handleCreateInquiry} />
+        <InquiryBoardWritePostPage
+          onBack={() => setViewMode("inquiryBoard")}
+          user={user}
+          onCreateInquiry={handleCreateInquiry}
+          editingPost={editingPost}
+        />
       ) : viewMode === "inquiryDetail" ? (
-        <InquiryPostDetailPage 
-          post={inquiries.find(i => i.id === selectedPostId)} 
-          onBack={() => setViewMode("inquiryBoard")} 
-          user={user} 
-          onAdminReply={handleAdminReply} 
+        <InquiryPostDetailPage
+          post={inquiries.find((i) => i.id === selectedPostId)}
+          user={user}
+          onBack={() => setViewMode("inquiryBoard")}
+          onAdminReply={handleAdminReply}
+          onEdit={(post) => handleEditPost(post, "QNA")}
+          onDelete={(postId) => handleDeleteBoard("QNA", postId, setInquiries, setInquiriesPaging)}
         />
       ) : viewMode === "principles" ? (
         <EmergencyPrinciplesPage />
@@ -265,7 +821,7 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
       ) : viewMode === "aedVideo" ? (
         <AEDVideoPage />
       ) : (
-        <SituationFirstAidPage /> 
+        <SituationFirstAidPage />
       )}
     </div>
   );

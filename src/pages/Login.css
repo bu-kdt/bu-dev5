@@ -212,3 +212,44 @@
 /* 유틸리티 */
 .lg-mt-20 { margin-top: 20px; }
 .lg-mt-30 { margin-top: 30px; }
+
+/* ========================================
+   버튼 그룹 스타일 (아이디찾기, 비밀번호찾기용)
+   Login.css에 추가
+   ======================================== */
+
+/* 버튼 그룹 (2개 버튼을 나란히) */
+.lg-btn-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.lg-btn-group button {
+  flex: 1; /* 버튼이 동일한 너비로 배치 */
+}
+
+/* 보조 버튼 (로그인으로 버튼) */
+.lg-btn-secondary {
+  padding: 16px 24px;
+  background: white;
+  color: #e11d48;
+  border: 2px solid #e11d48;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lg-btn-secondary:hover {
+  background: #fff5f7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+}
+
+.lg-btn-secondary:active {
+  transform: translateY(0);
+}
+
+/* 기존 lg-mt-20 클래스를 사용하는 버튼은 제거 (lg-btn-group에서 처리) */

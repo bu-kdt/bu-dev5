@@ -1,5 +1,6 @@
 import React from "react";
 import { CiBookmark } from "react-icons/ci";
+import styles from "./Header.module.css";
 
 export default function Header({ user, onLogout, onGoLogin, onGoHome, onOpenBookmark }) {
   return (
@@ -28,12 +29,18 @@ export default function Header({ user, onLogout, onGoLogin, onGoHome, onOpenBook
               <span className="gl-userName">{user.name || user.userId}</span>
             </div>
 
-            <button className="gl-btn gl-btnGhost" onClick={onLogout}>
+            <button 
+              className={`gl-btn gl-btnGhost ${styles.headerButton}`}
+              onClick={onLogout}
+            >
               로그아웃
             </button>
           </>
         ) : (
-          <button className="gl-btn gl-btnPrimary" onClick={onGoLogin}>
+          <button 
+            className={`gl-btn gl-btnPrimary ${styles.headerButton}`}
+            onClick={onGoLogin}
+          >
             로그인
           </button>
         )}

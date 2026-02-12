@@ -1,7 +1,5 @@
 /* =========================================================
-   components.css
-   - Header / MegaMenu / SearchBar / FilterView / MapView / ResultView / Bookmark
-   - 토큰(:root) / body 배경 등은 tokens.css, base.css로 분리 권장
+   components.css - 중복 제거 완료
    ========================================================= */
 
 /* Page */
@@ -25,17 +23,13 @@
   max-width: var(--max);
   margin: 0 auto;
   padding: 16px 22px;
-
-  /* ✅ 유지: flex */
   display: flex;
   align-items: center;
   gap: 18px;
-
-  /* ✅ 추가: 가운데 nav를 absolute-center 하려면 기준이 필요 */
   position: relative;
 }
 
-/* Brand (logo.png only) */
+/* Brand */
 .gl-brand{
   display:flex;
   align-items:center;
@@ -43,12 +37,9 @@
   cursor:pointer;
   user-select:none;
   min-width: 210px;
-
-  /* ✅ 추가: 로고는 항상 왼쪽 */
   flex: 0 0 auto;
 }
 
-/* 로고 영역 넉넉하게 */
 .gl-logoMark{
   width: 150px;
   height: 60px;
@@ -66,9 +57,6 @@
    ========================= */
 .gl-nav{
   flex: 1;
-  position: relative;
-
-  /* ✅ 추가: 메뉴를 화면 중앙에 “진짜 중앙 고정” */
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -165,8 +153,6 @@
   gap: 10px;
   min-width: 220px;
   justify-content: flex-end;
-
-  /* ✅ 추가: 액션(로그인/유저)은 항상 오른쪽 */
   margin-left: auto;
   flex: 0 0 auto;
 }
@@ -194,7 +180,6 @@
   color: #111;
 }
 
-/* Bookmark button (크게 + 빨강) */
 .gl-bookmarkBtn{
   width: 44px;
   height: 44px;
@@ -225,10 +210,18 @@
   cursor: pointer;
   font-weight: 900;
   border-radius: 14px;
-  padding: 10px 16px;
+  padding: 10px 20px;
   transition: transform .05s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+  white-space: nowrap;
 }
 .gl-btn:active{ transform: translateY(1px); }
+
+/* ✅ Header 버튼만 자동 너비 */
+.gl-actions .gl-btn {
+  width: auto !important;
+  min-width: 50px;
+  max-width: 60px;
+}
 
 .gl-btnPrimary{
   background: var(--primary);
@@ -265,7 +258,6 @@
 .gl-btnIco{ margin-right: 8px; }
 .gl-arrow{ margin-left: 8px; font-size: 18px; }
 
-/* 결과에서 즐겨찾기 버튼 선택 상태 */
 .gl-btnGhost.is-saved{
   border-color: rgba(225,29,72,.45);
   color: var(--primary);
@@ -317,7 +309,7 @@
 }
 
 /* =========================
-   Main layout (3 columns)
+   Main layout
    ========================= */
 .gl-main{
   max-width: var(--max);
@@ -329,7 +321,6 @@
   align-items: stretch;
 }
 
-/* Cards */
 .gl-card{
   background: var(--card);
   border: 1px solid rgba(244,185,196,.8);
@@ -346,47 +337,47 @@
 /* =========================
    FilterView
    ========================= */
-.gl-filterCard{
+.gl-filterCard {
   padding-bottom: 14px;
 }
 
-.gl-filterGroup{
+.gl-filterGroup {
   padding: 6px 18px 10px;
-  display:flex;
-  flex-direction:column;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
 
-.gl-check{
-  display:flex;
-  align-items:center;
+.gl-check {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  cursor:pointer;
-  user-select:none;
+  cursor: pointer;
+  user-select: none;
   font-weight: 800;
   font-size: 14px;
   color: #111;
 }
-.gl-check input{
-  position:absolute;
+.gl-check input {
+  position: absolute;
   opacity: 0;
-  pointer-events:none;
+  pointer-events: none;
 }
-.gl-checkBox{
+.gl-checkBox {
   width: 18px; height: 18px;
   border-radius: 5px;
-  border: 1px solid rgba(244,185,196,.9);
-  background: rgba(255,255,255,.95);
-  box-shadow: 0 8px 14px rgba(0,0,0,.04);
+  border: 1px solid rgba(244, 185, 196, .9);
+  background: rgba(255, 255, 255, .95);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, .04);
   position: relative;
 }
-.gl-check input:checked + .gl-checkBox{
-  background: var(--primary);
-  border-color: rgba(225,29,72,.9);
+.gl-check input:checked + .gl-checkBox {
+  background: var(--primary, #e11d48);
+  border-color: rgba(225, 29, 72, .9);
 }
-.gl-check input:checked + .gl-checkBox::after{
-  content:"";
-  position:absolute;
+.gl-check input:checked + .gl-checkBox::after {
+  content: "";
+  position: absolute;
   left: 5px; top: 3px;
   width: 6px; height: 10px;
   border: 2px solid #fff;
@@ -394,71 +385,79 @@
   transform: rotate(45deg);
 }
 
-.gl-divider{
+.gl-divider {
   height: 1px;
-  background: rgba(244,185,196,.65);
+  background: rgba(244, 185, 196, .65);
   margin: 6px 18px 12px;
 }
 
-.gl-radioGroup{
+.gl-radioGroup {
   padding: 0 18px 14px;
-  display:flex;
-  flex-direction:column;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
-.gl-radio{
-  display:flex;
-  align-items:center;
+.gl-radio {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  cursor:pointer;
-  user-select:none;
+  cursor: pointer;
+  user-select: none;
   font-weight: 900;
   font-size: 14px;
   color: #111;
 }
-.gl-radio input{
-  position:absolute;
+.gl-radio input {
+  position: absolute;
   opacity: 0;
-  pointer-events:none;
+  pointer-events: none;
 }
-.gl-radioDot{
+.gl-radioDot {
   width: 18px; height: 18px;
   border-radius: 999px;
-  border: 1px solid rgba(244,185,196,.95);
-  background: rgba(255,255,255,.95);
+  border: 1px solid rgba(244, 185, 196, .95);
+  background: rgba(255, 255, 255, .95);
   position: relative;
 }
-.gl-radio input:checked + .gl-radioDot{
-  border-color: rgba(225,29,72,.85);
+.gl-radio input:checked + .gl-radioDot {
+  border-color: rgba(225, 29, 72, .85);
 }
-.gl-radio input:checked + .gl-radioDot::after{
-  content:"";
-  position:absolute;
+.gl-radio input:checked + .gl-radioDot::after {
+  content: "";
+  position: absolute;
   left: 50%; top: 50%;
   width: 10px; height: 10px;
-  transform: translate(-50%,-50%);
+  transform: translate(-50%, -50%);
   border-radius: 999px;
-  background: var(--primary);
-  box-shadow: 0 0 0 5px rgba(225,29,72,.12);
+  background: var(--primary, #e11d48);
+  box-shadow: 0 0 0 5px rgba(225, 29, 72, .12);
 }
 
-.gl-filterBtns{
-  padding: 6px 18px 10px;
-  display:flex;
-  flex-direction:column;
-  gap: 10px;
+.gl-buttonGroup {
+  padding: 8px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gl-buttonGroup:first-of-type .gl-btn {
+  width: 100%; height: 46px; border-radius: 22px; font-size: 15px;
+}
+.gl-buttonGroup .gl-btnPrimary {
+  width: 100%; height: 48px; border-radius: 18px; font-size: 15px;
+}
+.gl-buttonGroup .gl-btnOutline,
+.gl-buttonGroup .gl-btnGhost {
+  width: 100%; height: 44px; border-radius: 18px; font-size: 14px;
 }
 
 /* =========================
    MapView
    ========================= */
-
-/* 카드 자체 높이 확보 */
 .gl-mapCard{
   padding: 16px;
   display: flex;
   flex-direction: column;
-  min-height: 560px;   /* 🔥 핵심 */
+  min-height: 560px;
 }
 
 .gl-mapPlaceholder{
@@ -515,9 +514,40 @@
 
 .gl-kakaoMap{
   width: 100%;
-  height: 560px;   /* 🔥 이게 핵심 */
+  height: 560px;
   border-radius: 16px;
   overflow: hidden;
+}
+
+.gl-mapWrapper{
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.gl-myLocationBtn{
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+  width: 160px;
+  height: 40px;
+  border-radius: 14px;
+  border: 1px solid rgba(244,185,196,.8);
+  background: rgba(255,255,255,.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+  transition: all .15s ease;
+}
+
+.gl-myLocationBtn:hover{
+  background: rgba(225,29,72,.08);
+  border-color: rgba(225,29,72,.6);
+  transform: translateY(-2px);
 }
 
 /* =========================
@@ -560,7 +590,6 @@
   max-height: 640px;
 }
 
-/* custom scroll */
 .gl-resultList::-webkit-scrollbar{ width: 10px; }
 .gl-resultList::-webkit-scrollbar-thumb{
   background: rgba(225,29,72,.20);
@@ -685,7 +714,7 @@
 }
 
 /* =========================
-   Bookmark (새 뷰 / 오버레이)
+   Bookmark
    ========================= */
 .gl-bmView{
   position: fixed;
@@ -817,6 +846,26 @@
 /* =========================
    Responsive
    ========================= */
+@media (max-width: 1200px) {
+  .gl-header-inner {
+    padding: 12px 16px;
+  }
+  .gl-brand {
+    min-width: 180px;
+  }
+  .gl-logoMark {
+    width: 120px;
+    height: 50px;
+  }
+  .gl-navRow {
+    gap: 24px;
+  }
+  .gl-navItem {
+    font-size: 15px;
+    padding: 6px 8px;
+  }
+}
+
 @media (max-width: 1180px){
   .gl-main{
     grid-template-columns: 300px 1fr;
@@ -830,83 +879,123 @@
   .gl-resultList{ max-height: 420px; }
 }
 
+@media (max-width: 900px) {
+  .gl-nav {
+    display: none;
+  }
+  .gl-brand {
+    min-width: 150px;
+  }
+  .gl-logoMark {
+    width: 100px;
+    height: 45px;
+  }
+}
+
 @media (max-width: 760px){
   .gl-header-inner{
     padding: 14px 14px;
     gap: 12px;
-
-    /* ✅ 모바일에서는 absolute center가 겹칠 수 있어서 해제 */
     position: relative;
   }
-
-  /* ✅ 모바일: nav absolute 해제해서 줄바꿈/겹침 방지 */
   .gl-nav{
     position: static;
     transform: none;
     translate: 0 0;
     flex: 1;
   }
-
   .gl-brand{ min-width: auto; }
   .gl-navRow{ gap: 14px; }
   .gl-actions{ min-width: auto; }
-
   .gl-searchBarWrap{ padding: 0 14px 12px; }
   .gl-main{
     padding: 0 14px;
     grid-template-columns: 1fr;
   }
   .gl-mapPlaceholder{ min-height: 420px; }
-
-  /* 모바일에서 북마크 뷰 카드 크기 조정 */
   .gl-bmCard{
     width: min(560px, 94vw);
     height: min(680px, 86vh);
   }
-
   .gl-kakaoMap{
-  width: 100%;
-  height: 560px;       /* 🔥 100% 말고 고정값 */
-  border-radius: 16px;
-  overflow: hidden;
+    width: 100%;
+    height: 560px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
 }
 
+@media (max-width: 600px) {
+  .gl-header-inner {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .gl-brand {
+    min-width: 120px;
+  }
+  .gl-logoMark {
+    width: 80px;
+    height: 40px;
+  }
+  .gl-actions {
+    min-width: auto;
+    gap: 6px;
+  }
+  .gl-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-width: 70px;
+  }
+  .gl-userChip {
+    padding: 6px 8px;
+  }
+  .gl-userName {
+    display: none;
+  }
+  .gl-bookmarkBtn {
+    width: 40px;
+    height: 40px;
+  }
+  .gl-bookmarkBtn svg {
+    font-size: 24px;
+  }
+  .gl-searchBarWrap {
+    padding: 12px;
+  }
+  .gl-searchBar {
+    height: 50px;
+  }
+  .gl-mapPlaceholder {
+    min-height: 400px;
+  }
 }
-/* 지도 래퍼 */
-.gl-mapWrapper{
-  position: relative;
-  width: 100%;
-  height: 100%;
+
+@media (max-width: 400px) {
+  .gl-logoMark {
+    width: 60px;
+    height: 35px;
+  }
+  .gl-actions .gl-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-width: 60px;
+  }
+  .gl-searchBar {
+    height: 46px;
+  }
 }
 
-/* 내 위치 버튼 */
-.gl-myLocationBtn{
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 10;
-
-  width: 160px;
-  height: 40px;
-  border-radius: 14px;
-
-  border: 1px solid rgba(244,185,196,.8);
-  background: rgba(255,255,255,.95);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 15px;
-  cursor: pointer;
-
-  box-shadow: 0 10px 25px rgba(0,0,0,.08);
-  transition: all .15s ease;
+@media print {
+  .gl-header,
+  .gl-filterView,
+  .gl-mobile-toggle,
+  .gl-result-close,
+  .gl-toggle-btn {
+    display: none !important;
+  }
+  .gl-result-view {
+    position: static !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
 }
-
-.gl-myLocationBtn:hover{
-  background: rgba(225,29,72,.08);
-  border-color: rgba(225,29,72,.6);
-  transform: translateY(-2px);
-}
-

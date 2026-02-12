@@ -6,8 +6,16 @@ export default function MegaMenu({
   setActiveMenu,
   showMega,
   setShowMega,
-  onMenuClick, // Home.jsx에서 전달받은 화면 전환 함수
+  onMenuClick, // ✅ 추가
 }) {
+  
+  const handleClick = (e, label) => {
+    e.preventDefault();
+    if (onMenuClick) {
+      onMenuClick(label);
+    }
+  };
+
   return (
     <nav
       className="gl-nav"
@@ -23,41 +31,34 @@ export default function MegaMenu({
       <div className="gl-navRow">
         {menuItems.map((m, idx) => (
           <a
-            key={idx}
+            key={m.label}
             className={`gl-navItem ${activeMenu === idx ? "is-active" : ""}`}
             href={m.href}
             onMouseEnter={() => setActiveMenu(idx)}
-            onClick={(e) => {
-              e.preventDefault();
-              onMenuClick(m.label); // 부모 메뉴 클릭 시 라벨 전달
-            }}
+            onClick={(e) => handleClick(e, m.label)}
           >
             {m.label}
           </a>
         ))}
       </div>
 
-      {showMega && (
+      {showMega && menuItems.some(m => m.subItems && m.subItems.length > 0) && (
         <div className="gl-mega">
           <div className="gl-megaInner">
             {menuItems.map((m, idx) => (
               <div
-                key={idx}
+                key={m.label}
                 className={`gl-megaCol ${activeMenu === idx ? "is-active" : ""}`}
                 onMouseEnter={() => setActiveMenu(idx)}
               >
                 <div className="gl-megaTitle">{m.label}</div>
                 <div className="gl-megaList">
-                  {m.subItems.map((s, sIdx) => (
-                    <a
-                      key={sIdx}
-                      className="gl-megaLink"
+                  {m.subItems && m.subItems.map((s) => (
+                    <a 
+                      key={s.label} 
+                      className="gl-megaLink" 
                       href={s.href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        // [수정] 부모 라벨(m.label) 대신 서브 메뉴 라벨(s.label)을 전달합니다.
-                        onMenuClick(s.label); 
-                      }}
+                      onClick={(e) => handleClick(e, s.label)}
                     >
                       {s.label}
                     </a>
