@@ -41,7 +41,7 @@ export default function InquiryBoardPage({ inquiries, paging, onWrite, onSelectI
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchKeyword, searchType]);
+  }, [searchKeyword, searchType, prevKeyword, onSearch]); // ✅ dependency 추가
 
   const handleSearchTypeChange = (newType) => {
     setSearchType(newType);
@@ -129,32 +129,37 @@ export default function InquiryBoardPage({ inquiries, paging, onWrite, onSelectI
 
           <tbody>
             {inquiries && inquiries.length > 0 ? (
-              inquiries.map((q, index) => (
-                <tr key={q.id} onClick={() => onSelectInquiry(q.id)}>
-                  <td className="gl-td-no">
-                    {paging ? paging.totalElements - (paging.currentPage * 10) - index : q.id}
-                  </td>
+              inquiries.map((q, index) => {
+                // ✅ status 계산: commentCount가 0보다 크면 "완료", 그렇지 않으면 "대기"
+                const status = (q.commentCount && q.commentCount > 0) ? "완료" : "대기";
+                
+                return (
+                  <tr key={q.id} onClick={() => onSelectInquiry(q.id)}>
+                    <td className="gl-td-no">
+                      {paging ? paging.totalElements - (paging.currentPage * 10) - index : q.id}
+                    </td>
 
-                  <td className="gl-td-status">
-                    <span className={`gl-status-badge ${q.status === "완료" ? "is-complete" : "is-waiting"}`}>
-                      {q.status}
-                    </span>
-                  </td>
-
-                  <td className="gl-td-title">
-                    {q.isPrivate && <HiOutlineLockClosed className="gl-lock-icon" />}
-                    <span className="gl-title-text">{q.title}</span>
-                    {q.commentCount > 0 && (
-                      <span className="gl-comment-count-text">
-                        {` (${q.commentCount})`}
+                    <td className="gl-td-status">
+                      <span className={`gl-status-badge ${status === "완료" ? "is-complete" : "is-waiting"}`}>
+                        {status}
                       </span>
-                    )}
-                  </td>
+                    </td>
 
-                  <td className="gl-td-author">{q.author}</td>
-                  <td className="gl-td-date">{formatDate(q.createdAt)}</td>
-                </tr>
-              ))
+                    <td className="gl-td-title">
+                      {q.isPrivate && <HiOutlineLockClosed className="gl-lock-icon" />}
+                      <span className="gl-title-text">{q.title}</span>
+                      {q.commentCount > 0 && (
+                        <span className="gl-comment-count-text">
+                          {` (${q.commentCount})`}
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="gl-td-author">{q.author}</td>
+                    <td className="gl-td-date">{formatDate(q.createdAt)}</td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan="5" style={{ padding: "40px", textAlign: "center", color: "#999" }}>

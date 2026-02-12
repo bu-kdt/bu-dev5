@@ -41,7 +41,7 @@ export default function NoticePage({ notices, paging, isAdmin, onWrite, onSelect
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchKeyword, searchType]);
+  }, [searchKeyword, searchType, prevKeyword, onSearch]); // ✅ dependency 추가
 
   const handleSearchTypeChange = (newType) => {
     setSearchType(newType);

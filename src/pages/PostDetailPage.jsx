@@ -9,7 +9,7 @@ import {
 } from "react-icons/hi2";
 import "./PostDetailPage.css";
 
-export default function PostDetailPage({ post, user, onBack, onAddComment, onEdit, onDelete }) {
+export default function PostDetailPage({ post, user, onBack, onRefreshBoard, onEdit, onDelete }) {
   const [commentInput, setCommentInput] = useState("");
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -93,6 +93,11 @@ export default function PostDetailPage({ post, user, onBack, onAddComment, onEdi
         }
         
         setCommentInput("");
+        
+        // ✅ 게시판 목록만 새로고침 (댓글은 이미 작성했으므로)
+        if (onRefreshBoard) {
+          onRefreshBoard();
+        }
       } else {
         const errorText = await response.text();
         alert(errorText || "댓글 등록에 실패했습니다.");

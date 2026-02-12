@@ -306,26 +306,27 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
   // =========================
   // ✅ 게시판 메뉴
   // =========================
-  const handleMenuClick = (item) => {
-    if (item.label === "서비스 소개") {
+  const handleMenuClick = (label) => {
+    // ✅ MegaMenu에서 label 문자열을 전달받음
+    if (label === "서비스 소개") {
       setViewMode("intro");
-    } else if (item.label === "실시간 검색") {
+    } else if (label === "실시간 검색") {
       setViewMode("search");
-    } else if (item.label === "행동원칙") {
+    } else if (label === "행동원칙") {
       setViewMode("principles");
-    } else if (item.label === "상황별 처치") {
+    } else if (label === "상황별 처치") {
       setViewMode("situations");
-    } else if (item.label === "AED 사용법") {
+    } else if (label === "AED 사용법") {
       setViewMode("aedGuide");
-    } else if (item.label === "AED 사용설명 동영상") {
+    } else if (label === "AED 사용설명 동영상") {
       setViewMode("aedVideo");
-    } else if (item.label === "정보공유 게시판") {
+    } else if (label === "정보공유 게시판") {
       setViewMode("infoBoard");
       loadBoardData("INFO", 0, 10, postsSearch.type, postsSearch.keyword, setPosts, setPostsPaging);
-    } else if (item.label === "관리자 문의 게시판") {
+    } else if (label === "관리자 문의 게시판") {
       setViewMode("inquiryBoard");
       loadBoardData("QNA", 0, 10, inquiriesSearch.type, inquiriesSearch.keyword, setInquiries, setInquiriesPaging);
-    } else if (item.label === "전체 공지") {
+    } else if (label === "전체 공지") {
       setViewMode("notice");
       loadBoardData("NOTICE", 0, 10, noticesSearch.type, noticesSearch.keyword, setNotices, setNoticesPaging);
     }
@@ -338,26 +339,23 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
     try {
       setLoading(true);
 
-      const searchTypeMap = {
-        전체: "ALL",
-        제목: "TITLE",
-        내용: "CONTENT",
-        작성자: "AUTHOR",
-      };
-      const backendSearchType = searchTypeMap[searchType] || "ALL";
-
-      let url = `${API_BASE_URL}/api/board/${boardType}/posts?page=${page}&size=${size}&sort=createdAt,desc`;
+      // ✅ 백엔드 API 경로: /boards/category/{category}/page
+      let url = `${API_BASE_URL}/boards/category/${boardType}/page?page=${page}&size=${size}`;
+      
+      // ✅ 검색어가 있으면 searchType과 keyword 추가
       if (keyword && keyword.trim()) {
-        url += `&searchType=${backendSearchType}&keyword=${encodeURIComponent(keyword.trim())}`;
+        url += `&searchType=${encodeURIComponent(searchType)}&keyword=${encodeURIComponent(keyword.trim())}`;
       }
 
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error(`게시글 로드 실패 (${res.status})`);
 
       const data = await res.json();
+      
+      // ✅ 백엔드 응답 형식에 맞춰 데이터 설정
       setPosts(data.content || []);
       setPaging({
-        currentPage: data.number || 0,
+        currentPage: data.currentPage || 0,
         totalPages: data.totalPages || 0,
         totalElements: data.totalElements || 0,
       });
@@ -394,7 +392,7 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
     }
   };
 
-  const handleCreatePost = async (title, content) => {
+  const handleCreatePost = async ({ title, content }) => {
     if (!user) {
       alert("로그인이 필요합니다.");
       onGoLogin?.();
@@ -402,11 +400,44 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/board/INFO/posts`, {
+      // ✅ 수정 모드인 경우
+      if (editingPost && editingPost.id) {
+        const res = await fetch(`${API_BASE_URL}/boards/${editingPost.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ 
+            title, 
+            content,
+            category: "INFO"
+          }),
+        });
+
+        if (res.status === 401) {
+          alert("로그인이 필요합니다.");
+          onGoLogin?.();
+          return;
+        }
+
+        if (!res.ok) throw new Error(`게시글 수정 실패 (${res.status})`);
+
+        alert("게시글이 수정되었습니다.");
+        setEditingPost(null);
+        await loadBoardData("INFO", postsPaging.currentPage, 10, postsSearch.type, postsSearch.keyword, setPosts, setPostsPaging);
+        setViewMode("infoBoard");
+        return;
+      }
+
+      // ✅ 새 게시글 작성
+      const res = await fetch(`${API_BASE_URL}/boards`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ 
+          title, 
+          content,
+          category: "INFO"
+        }),
       });
 
       if (res.status === 401) {
@@ -421,8 +452,8 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
       await loadBoardData("INFO", postsPaging.currentPage, 10, postsSearch.type, postsSearch.keyword, setPosts, setPostsPaging);
       setViewMode("infoBoard");
     } catch (e) {
-      console.error("게시글 작성 오류:", e);
-      alert("게시글 작성 중 오류가 발생했습니다.");
+      console.error("게시글 작성/수정 오류:", e);
+      alert("게시글 작성/수정 중 오류가 발생했습니다.");
     }
   };
 
@@ -434,12 +465,14 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/board/INFO/posts/${postId}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ content }),
-      });
+      // ✅ 백엔드 API: POST /comments?boardId={boardId}&commentDto={content}
+      const res = await fetch(
+        `${API_BASE_URL}/comments?boardId=${postId}&commentDto=${encodeURIComponent(content)}`, 
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
 
       if (res.status === 401) {
         alert("로그인이 필요합니다.");
@@ -457,6 +490,11 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
     }
   };
 
+  // ✅ 게시판 목록만 새로고침 (댓글 작성은 하지 않음)
+  const handleRefreshInfoBoard = () => {
+    loadBoardData("INFO", postsPaging.currentPage, 10, postsSearch.type, postsSearch.keyword, setPosts, setPostsPaging);
+  };
+
   const handleEditPost = (post, boardType) => {
     setEditingPost(post);
     if (boardType === "INFO") {
@@ -472,7 +510,8 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/board/${boardType}/posts/${postId}`, {
+      // ✅ 백엔드 API: DELETE /boards/{id}
+      const res = await fetch(`${API_BASE_URL}/boards/${postId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -503,23 +542,60 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
     }
   };
 
-  const handleSelectPost = (id) => {
+  const handleSelectPost = (postOrId) => {
+    // ✅ 객체가 전달된 경우 id 추출, 아니면 그대로 사용
+    const id = typeof postOrId === 'object' ? postOrId.id : postOrId;
     setSelectedPostId(id);
     setViewMode("postDetail");
   };
 
-  const handleSelectInquiry = (id) => {
+  const handleSelectInquiry = (inquiryOrId) => {
+    // ✅ 객체가 전달된 경우 id 추출, 아니면 그대로 사용
+    const id = typeof inquiryOrId === 'object' ? inquiryOrId.id : inquiryOrId;
     setSelectedPostId(id);
     setViewMode("inquiryDetail");
   };
 
-  const handleCreateNotice = async (title, content) => {
+  const handleCreateNotice = async ({ title, content }) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/board/NOTICE/posts`, {
+      // ✅ 수정 모드인 경우
+      if (editingPost && editingPost.id) {
+        const res = await fetch(`${API_BASE_URL}/boards/${editingPost.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ 
+            title, 
+            content,
+            category: "NOTICE"
+          }),
+        });
+
+        if (res.status === 401) {
+          alert("로그인이 필요합니다.");
+          onGoLogin?.();
+          return;
+        }
+
+        if (!res.ok) throw new Error(`공지사항 수정 실패 (${res.status})`);
+
+        alert("공지사항이 수정되었습니다.");
+        setEditingPost(null);
+        await loadBoardData("NOTICE", noticesPaging.currentPage, 10, noticesSearch.type, noticesSearch.keyword, setNotices, setNoticesPaging);
+        setViewMode("notice");
+        return;
+      }
+
+      // ✅ 새 공지사항 작성
+      const res = await fetch(`${API_BASE_URL}/boards`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ 
+          title, 
+          content,
+          category: "NOTICE"
+        }),
       });
 
       if (res.status === 401) {
@@ -534,12 +610,12 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
       await loadBoardData("NOTICE", noticesPaging.currentPage, 10, noticesSearch.type, noticesSearch.keyword, setNotices, setNoticesPaging);
       setViewMode("notice");
     } catch (e) {
-      console.error("공지사항 작성 오류:", e);
-      alert("공지사항 작성 중 오류가 발생했습니다.");
+      console.error("공지사항 작성/수정 오류:", e);
+      alert("공지사항 작성/수정 중 오류가 발생했습니다.");
     }
   };
 
-  const handleCreateInquiry = async (title, content) => {
+  const handleCreateInquiry = async ({ title, content }) => {
     if (!user) {
       alert("로그인이 필요합니다.");
       onGoLogin?.();
@@ -547,11 +623,44 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/board/QNA/posts`, {
+      // ✅ 수정 모드인 경우
+      if (editingPost && editingPost.id) {
+        const res = await fetch(`${API_BASE_URL}/boards/${editingPost.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ 
+            title, 
+            content,
+            category: "QNA"
+          }),
+        });
+
+        if (res.status === 401) {
+          alert("로그인이 필요합니다.");
+          onGoLogin?.();
+          return;
+        }
+
+        if (!res.ok) throw new Error(`문의 수정 실패 (${res.status})`);
+
+        alert("문의가 수정되었습니다.");
+        setEditingPost(null);
+        await loadBoardData("QNA", inquiriesPaging.currentPage, 10, inquiriesSearch.type, inquiriesSearch.keyword, setInquiries, setInquiriesPaging);
+        setViewMode("inquiryBoard");
+        return;
+      }
+
+      // ✅ 새 문의 작성
+      const res = await fetch(`${API_BASE_URL}/boards`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ 
+          title, 
+          content,
+          category: "QNA"
+        }),
       });
 
       if (res.status === 401) {
@@ -566,8 +675,8 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
       await loadBoardData("QNA", inquiriesPaging.currentPage, 10, inquiriesSearch.type, inquiriesSearch.keyword, setInquiries, setInquiriesPaging);
       setViewMode("inquiryBoard");
     } catch (e) {
-      console.error("문의하기 작성 오류:", e);
-      alert("문의하기 작성 중 오류가 발생했습니다.");
+      console.error("문의하기 작성/수정 오류:", e);
+      alert("문의하기 작성/수정 중 오류가 발생했습니다.");
     }
   };
 
@@ -777,7 +886,7 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
           post={posts.find((p) => p.id === selectedPostId)}
           user={user}
           onBack={() => setViewMode("infoBoard")}
-          onAddComment={handleAddComment}
+          onRefreshBoard={handleRefreshInfoBoard}
           onEdit={(post) => handleEditPost(post, "INFO")}
           onDelete={(postId) => handleDeleteBoard("INFO", postId, setPosts, setPostsPaging)}
         />

@@ -45,7 +45,7 @@ export default function InfoBoardPage({ posts, paging, loading, onWrite, onSelec
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchKeyword, searchType]); // onSearch 제거 (무한 루프 방지)
+  }, [searchKeyword, searchType, prevKeyword, onSearch]); // ✅ dependency 추가
 
   // ✅ 검색 타입 변경 시 즉시 검색
   const handleSearchTypeChange = (newType) => {
