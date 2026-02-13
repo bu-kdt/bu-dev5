@@ -131,16 +131,14 @@ export default function InfoBoardPage({ posts, paging, loading, onWrite, onSelec
               <th style={{ width: "80px" }}>번호</th>
               <th>제목</th>
               <th style={{ width: "120px" }}>작성자</th>
-              <th style={{ width: "100px" }}>조회</th>
-              <th style={{ width: "100px" }}>추천</th>
-              <th style={{ width: "100px" }}>날짜</th>
+              <th style={{ width: "120px" }}>날짜</th>
             </tr>
           </thead>
 
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" style={{ padding: "40px", textAlign: "center", color: "#666" }}>
+                <td colSpan="4" style={{ padding: "40px", textAlign: "center", color: "#666" }}>
                   게시글을 불러오는 중...
                 </td>
               </tr>
@@ -161,15 +159,13 @@ export default function InfoBoardPage({ posts, paging, loading, onWrite, onSelec
                   </td>
 
                   <td className="gl-td-author">{p.author}</td>
-                  <td className="gl-td-views">{p.views}</td>
-                  <td className="gl-td-likes">{p.likes}</td>
                   <td className="gl-td-date">{formatDate(p.createdAt)}</td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan="6"
+                  colSpan="4"
                   style={{ padding: "40px", textAlign: "center", color: "#999" }}
                 >
                   {searchKeyword ? "검색 결과가 없습니다." : "등록된 게시글이 없습니다."}

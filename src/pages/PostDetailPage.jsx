@@ -9,7 +9,7 @@ import {
 } from "react-icons/hi2";
 import "./PostDetailPage.css";
 
-export default function PostDetailPage({ post, user, onBack, onRefreshBoard, onEdit, onDelete }) {
+export default function PostDetailPage({ post, user, onBack, onRefreshBoard, onEdit, onDelete, onGoLogin }) {
   const [commentInput, setCommentInput] = useState("");
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -72,6 +72,15 @@ export default function PostDetailPage({ post, user, onBack, onRefreshBoard, onE
 
   const handleCommentSubmit = async () => {
     if (!commentInput.trim()) return;
+    
+    // ✅ 로그인 체크
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      if (onGoLogin) {
+        onGoLogin();
+      }
+      return;
+    }
     
     try {
       const response = await fetch(
@@ -150,18 +159,12 @@ export default function PostDetailPage({ post, user, onBack, onRefreshBoard, onE
           <div className="gl-post-meta">
             <span className="gl-meta-item"><HiOutlineUserCircle /> {post.author}</span>
             <span className="gl-meta-item"><HiOutlineClock /> {formatDate(post.createdAt)}</span>
-            <span className="gl-meta-item">조회 {post.views}</span>
-            <span className="gl-meta-item is-red">추천 {post.likes}</span>
           </div>
         </header>
 
         <main className="gl-post-content">
           {post.content}
         </main>
-
-        <footer className="gl-post-footer">
-          <button className="gl-like-btn">❤️ 이 글 추천하기</button>
-        </footer>
 
         <section className="gl-comment-section">
           <div className="gl-comment-header">

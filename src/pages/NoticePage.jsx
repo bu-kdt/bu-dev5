@@ -136,8 +136,7 @@ export default function NoticePage({ notices, paging, isAdmin, onWrite, onSelect
               <th style={{ width: "80px" }}>번호</th>
               <th>제목</th>
               <th style={{ width: "120px" }}>작성자</th>
-              <th style={{ width: "100px" }}>조회</th>
-              <th style={{ width: "100px" }}>날짜</th>
+              <th style={{ width: "120px" }}>날짜</th>
             </tr>
           </thead>
 
@@ -177,14 +176,13 @@ export default function NoticePage({ notices, paging, isAdmin, onWrite, onSelect
                     </td>
 
                     <td className="gl-td-author">{n.author}</td>
-                    <td className="gl-td-views">{n.views}</td>
                     <td className="gl-td-date">{formatDate(n.createdAt)}</td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan="5" style={{ padding: "40px", textAlign: "center", color: "#999" }}>
+                <td colSpan="4" style={{ padding: "40px", textAlign: "center", color: "#999" }}>
                   {searchKeyword ? "검색 결과가 없습니다." : "등록된 공지사항이 없습니다."}
                 </td>
               </tr>

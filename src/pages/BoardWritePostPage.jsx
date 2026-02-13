@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { HiXMark, HiOutlineCloudArrowUp } from "react-icons/hi2"; 
+import { HiXMark } from "react-icons/hi2"; 
 import "./BoardWritePostPage.css";
 
 export default function BoardWritePostPage({ onBack, user, onCreatePost, editingPost }) {
@@ -60,15 +60,6 @@ export default function BoardWritePostPage({ onBack, user, onCreatePost, editing
               value={content}
               onChange={(e) => setContent(e.target.value)}
             ></textarea>
-          </div>
-
-          <div className="gl-input-group">
-            <label>사진 첨부</label>
-            <div className="gl-file-upload-zone">
-              <HiOutlineCloudArrowUp className="gl-upload-icon" />
-              <p>이미지를 클릭하거나 드래그하여 업로드</p>
-              <span>PNG, JPG, GIF (최대 5MB)</span>
-            </div>
           </div>
         </main>
 

@@ -84,8 +84,12 @@ const MapView = forwardRef(
         try {
           const data = await fetchJson("http://localhost:8080/api/hospitals");
           const list = Array.isArray(data) ? data : [];
-          drawHospitals(list);
-          onHospitalsLoaded?.(list);
+          
+          // ✅ 위도/경도가 있는 병원만 필터링
+          const validHospitals = list.filter((h) => h.hlat && h.hlon);
+          
+          drawHospitals(validHospitals);
+          onHospitalsLoaded?.(validHospitals);
         } catch (e) {
           console.error("병원 목록 로드 실패:", e);
           drawHospitals([]);
@@ -175,33 +179,9 @@ const MapView = forwardRef(
     };
 
     /* =========================
-       필터 적용
+       ✅ 1. 현재 위치 업데이트 (내 위치 마커만 표시, 모든 병원 표시 + 거리 계산)
     ========================= */
-    const applyFilters = (hospitals, lat, lon) => {
-      let result = hospitals
-        .filter((h) => h.hlat && h.hlon)
-        .map((h) => {
-          const hlat = Number(h.hlat);
-          const hlon = Number(h.hlon);
-
-          return {
-            ...h,
-            distance: calculateDistance(lat, lon, hlat, hlon),
-          };
-        });
-
-      if (radiusKm) {
-        result = result.filter((h) => h.distance <= radiusKm);
-      }
-
-      result.sort((a, b) => a.distance - b.distance);
-      return result;
-    };
-
-    /* =========================
-       현재 위치 기반 검색
-    ========================= */
-    const searchNearby = async () => {
+    const updateMyLocation = async () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
@@ -213,7 +193,7 @@ const MapView = forwardRef(
           const moveLatLng = new window.kakao.maps.LatLng(lat, lon);
           kakaoMapRef.current.panTo(moveLatLng);
 
-          // 내 위치 마커
+          // ✅ 내 위치 마커 표시
           if (myMarkerRef.current) myMarkerRef.current.setMap(null);
 
           const marker = new window.kakao.maps.Marker({
@@ -228,33 +208,29 @@ const MapView = forwardRef(
           marker.setMap(kakaoMapRef.current);
           myMarkerRef.current = marker;
 
-          // 반경 원
+          // ✅ 반경 원은 표시하지 않음
           clearCircle();
-          if (radiusKm) {
-            const circle = new window.kakao.maps.Circle({
-              center: moveLatLng,
-              radius: radiusKm * 1000,
-              strokeWeight: 2,
-              strokeColor: "#ff4d6d",
-              strokeOpacity: 0.8,
-              fillColor: "#ffccd5",
-              fillOpacity: 0.3,
-            });
-
-            circle.setMap(kakaoMapRef.current);
-            circleRef.current = circle;
-          }
 
           try {
             const data = await fetchJson("http://localhost:8080/api/hospitals");
             const list = Array.isArray(data) ? data : [];
 
-            const filtered = applyFilters(list, lat, lon);
+            // ✅ 모든 병원 표시하되 거리만 계산
+            const withDistance = list
+              .filter((h) => h.hlat && h.hlon)
+              .map((h) => {
+                const hlat = Number(h.hlat);
+                const hlon = Number(h.hlon);
+                return {
+                  ...h,
+                  distance: calculateDistance(lat, lon, hlat, hlon),
+                };
+              });
 
-            drawHospitals(filtered);
-            onHospitalsLoaded?.(filtered);
+            drawHospitals(withDistance);
+            onHospitalsLoaded?.(withDistance);
           } catch (e) {
-            console.error("주변 병원 로드 실패:", e);
+            console.error("병원 로드 실패:", e);
             drawHospitals([]);
             onHospitalsLoaded?.([]);
           }
@@ -264,6 +240,85 @@ const MapView = forwardRef(
           alert("현재 위치를 가져올 수 없습니다. 위치 권한을 허용해주세요.");
         }
       );
+    };
+
+    /* =========================
+       ✅ 2. 전체 병원 보기 (반경 필터 없음, 거리 계산 없음)
+    ========================= */
+    const showAllHospitals = async () => {
+      // ✅ 반경 원 제거
+      clearCircle();
+
+      try {
+        const data = await fetchJson("http://localhost:8080/api/hospitals");
+        const list = Array.isArray(data) ? data : [];
+
+        // ✅ 위도/경도가 있는 병원만 필터링 (지도에 표시 가능한 병원만)
+        const validHospitals = list.filter((h) => h.hlat && h.hlon);
+
+        drawHospitals(validHospitals);
+        onHospitalsLoaded?.(validHospitals);
+      } catch (e) {
+        console.error("병원 목록 로드 실패:", e);
+        drawHospitals([]);
+        onHospitalsLoaded?.([]);
+      }
+    };
+
+    /* =========================
+       ✅ 3. 반경 검색 (반경 원 표시 + 반경 내 병원만 표시)
+    ========================= */
+    const searchByRadius = async () => {
+      // ✅ 먼저 현재 위치를 가져와야 함
+      if (!myLocationRef.current) {
+        alert("먼저 '현재 위치 업데이트'를 눌러주세요.");
+        return;
+      }
+
+      const { lat, lng: lon } = myLocationRef.current;
+      const moveLatLng = new window.kakao.maps.LatLng(lat, lon);
+
+      // ✅ 반경 원 표시
+      clearCircle();
+      if (radiusKm) {
+        const circle = new window.kakao.maps.Circle({
+          center: moveLatLng,
+          radius: radiusKm * 1000,
+          strokeWeight: 2,
+          strokeColor: "#ff4d6d",
+          strokeOpacity: 0.8,
+          fillColor: "#ffccd5",
+          fillOpacity: 0.3,
+        });
+
+        circle.setMap(kakaoMapRef.current);
+        circleRef.current = circle;
+      }
+
+      try {
+        const data = await fetchJson("http://localhost:8080/api/hospitals");
+        const list = Array.isArray(data) ? data : [];
+
+        // ✅ 반경 내 병원만 필터링
+        const filtered = list
+          .filter((h) => h.hlat && h.hlon)
+          .map((h) => {
+            const hlat = Number(h.hlat);
+            const hlon = Number(h.hlon);
+            return {
+              ...h,
+              distance: calculateDistance(lat, lon, hlat, hlon),
+            };
+          })
+          .filter((h) => radiusKm ? h.distance <= radiusKm : true);
+
+        drawHospitals(filtered);
+        onHospitalsLoaded?.(filtered);
+      } catch (e) {
+        console.error("반경 검색 실패:", e);
+        drawHospitals([]);
+        onHospitalsLoaded?.([]);
+      }
     };
 
     /* =========================
@@ -278,8 +333,24 @@ const MapView = forwardRef(
         const data = await fetchJson(url);
         const list = Array.isArray(data) ? data : [];
 
-        drawHospitals(list);
-        onHospitalsLoaded?.(list);
+        // ✅ 위도/경도가 있는 병원만 필터링
+        let validHospitals = list.filter((h) => h.hlat && h.hlon);
+
+        // ✅ 현재 위치가 있으면 거리 계산
+        if (myLocationRef.current) {
+          const { lat, lng: lon } = myLocationRef.current;
+          validHospitals = validHospitals.map((h) => {
+            const hlat = Number(h.hlat);
+            const hlon = Number(h.hlon);
+            return {
+              ...h,
+              distance: calculateDistance(lat, lon, hlat, hlon),
+            };
+          });
+        }
+
+        drawHospitals(validHospitals);
+        onHospitalsLoaded?.(validHospitals);
       } catch (e) {
         console.error("이름 검색 실패:", e);
         drawHospitals([]);
@@ -287,10 +358,51 @@ const MapView = forwardRef(
       }
     };
 
+    /* =========================
+       주소 검색
+    ========================= */
+    const searchByAddress = async (address) => {
+      try {
+        const url = `http://localhost:8080/api/search?address=${encodeURIComponent(
+          address || ""
+        )}`;
+
+        const data = await fetchJson(url);
+        const list = Array.isArray(data) ? data : [];
+
+        // ✅ 위도/경도가 있는 병원만 필터링
+        let validHospitals = list.filter((h) => h.hlat && h.hlon);
+
+        // ✅ 현재 위치가 있으면 거리 계산
+        if (myLocationRef.current) {
+          const { lat, lng: lon } = myLocationRef.current;
+          validHospitals = validHospitals.map((h) => {
+            const hlat = Number(h.hlat);
+            const hlon = Number(h.hlon);
+            return {
+              ...h,
+              distance: calculateDistance(lat, lon, hlat, hlon),
+            };
+          });
+        }
+
+        drawHospitals(validHospitals);
+        onHospitalsLoaded?.(validHospitals);
+      } catch (e) {
+        console.error("주소 검색 실패:", e);
+        drawHospitals([]);
+        onHospitalsLoaded?.([]);
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       searchByName,
-      searchNearby,
-      moveToMyLocation: searchNearby,
+      searchByAddress,
+      updateMyLocation,      // ✅ 현재 위치 업데이트
+      showAllHospitals,      // ✅ 전체 병원 보기
+      searchByRadius,        // ✅ 반경 검색
+      moveToMyLocation: updateMyLocation, // 기존 호환성 유지
+      searchNearby: searchByRadius,       // 기존 호환성 유지
     }));
 
     return (

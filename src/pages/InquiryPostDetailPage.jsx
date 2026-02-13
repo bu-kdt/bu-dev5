@@ -170,7 +170,6 @@ export default function InquiryPostDetailPage({ post, onBack, user, onAdminReply
           <div className="gl-post-meta">
             <span className="gl-meta-item"><HiOutlineUserCircle /> {post.author}</span>
             <span className="gl-meta-item"><HiOutlineClock /> {formatDate(post.createdAt)}</span>
-            <span className="gl-meta-item">조회 {post.views || 0}</span>
           </div>
         </header>
 

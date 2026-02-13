@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { HiOutlineCloudArrowUp } from "react-icons/hi2";
 import "./InquiryBoardWritePostPage.css";
 
 export default function InquiryBoardWritePostPage({ onBack, user, onCreateInquiry, editingPost }) {
@@ -56,15 +55,6 @@ export default function InquiryBoardWritePostPage({ onBack, user, onCreateInquir
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
-        </div>
-
-        <div className="gl-write-field">
-          <label>사진 첨부</label>
-          <div className="gl-file-upload-zone">
-            <HiOutlineCloudArrowUp className="gl-upload-icon" />
-            <p>이미지를 클릭하거나 드래그하여 업로드</p>
-            <span>PNG, JPG, GIF (최대 5MB)</span>
-          </div>
         </div>
 
         <footer className="gl-write-footer">

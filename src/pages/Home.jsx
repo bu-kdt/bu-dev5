@@ -120,19 +120,19 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
 
   const handleMoveToMyLocation = () => {
     if (mapRef.current) {
-      mapRef.current.moveToMyLocation();
+      mapRef.current.updateMyLocation();
     }
   };
 
   const handleShowAllHospitals = () => {
     if (mapRef.current) {
-      mapRef.current.searchByName("");
+      mapRef.current.showAllHospitals();
     }
   };
 
   const handleSearchByRadius = () => {
     if (mapRef.current) {
-      mapRef.current.searchNearby();
+      mapRef.current.searchByRadius();
     }
   };
 
@@ -889,6 +889,7 @@ export default function Home({ user, onLogout, onGoLogin, onGoHome }) {
           onRefreshBoard={handleRefreshInfoBoard}
           onEdit={(post) => handleEditPost(post, "INFO")}
           onDelete={(postId) => handleDeleteBoard("INFO", postId, setPosts, setPostsPaging)}
+          onGoLogin={onGoLogin}
         />
       ) : viewMode === "inquiryBoard" ? (
         <InquiryBoardPage

@@ -60,7 +60,6 @@ export default function NoticeBoardDetailPage({ post, user, onBack, onEdit, onDe
           <div className="gl-notice-meta">
             <span className="gl-meta-item"><HiOutlineUserCircle /> {post.author}</span>
             <span className="gl-meta-item"><HiOutlineClock /> {formatDate(post.createdAt)}</span>
-            <span className="gl-meta-item">조회 {post.views}</span>
           </div>
         </header>
 

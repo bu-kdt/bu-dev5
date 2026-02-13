@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { HiOutlineCloudArrowUp, HiOutlineChevronLeft } from "react-icons/hi2";
+import { HiOutlineChevronLeft } from "react-icons/hi2";
 import { BsPinAngleFill } from "react-icons/bs";
 import "./NoticeBoardWritePostPage.css";
 
@@ -83,15 +83,6 @@ export default function NoticeBoardWritePostPage({ onBack, onCreateNotice, editi
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
-        </div>
-
-        <div className="gl-write-field">
-          <label>사진 첨부</label>
-          <div className="gl-file-upload-zone">
-            <HiOutlineCloudArrowUp className="gl-upload-icon" />
-            <p>이미지를 클릭하거나 드래그하여 업로드</p>
-            <span>PNG, JPG, GIF (최대 5MB)</span>
-          </div>
         </div>
 
         {/* ✅ 상단 고정 옵션 */}
